@@ -1,0 +1,135 @@
+---
+title: "CNORprob"
+author: "Panuwat Trairatphisan"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+# CNORprob (probabilistic logic) package's driver script
+
+```{r, message=FALSE, warning=FALSE}
+
+#rm(list=ls()); cat("\014") # clean screen and variables 
+
+# Install required packages (if were not previously installed)
+# source("https://bioconductor.org/biocLite.R") 
+# biocLite("CellNOptR") # for loading network/data and pre-processing
+# OR
+# install.packages("devtools")
+# library(devtools)
+# install_github('saezlab/CellNOptR/packages/CellNOptR', force=TRUE)
+# install.packages("Rsolnp") # optimisation algorithm
+# install.packages("R.utils") # Timeout control
+
+# Load prior library and R-scripts
+library(CNORprob)
+library(CellNOptR) # for loading network/data and pre-processing
+library(Rsolnp) # optimisation algorithm
+library(R.utils) # Timeout control
+# source("Rscripts/CNORprob_Rscripts.R")
+
+# Select model
+# 1 = CNOToy, 2 = FALCON Ex, 3 = PDGF, 4 = L-plastin
+# 5 = SR-crosstalk, 6 = CCl4 IFADO, 7 = APAP-JNK, 8 = pp-Raf XOR
+Selected_Model <- 8
+
+# Assign optimisation and parameter settings
+optRound_optim    <- 1        # rounds of optimisation
+L1Reg             <- 0.01     # assign weight for L1-regularisation
+MaxTime           <- 180      # time for each round of optimisation [seconds]
+HLbound           <- 0.5      # cut-off for high and low weights
+SSthresh          <- 2e-16    # cut-off for states' difference at steady-state
+PlotIterations    <- 1        # rounds of optimisation to generate plots
+SaveOptResults    <- TRUE     # [TRUE,FALSE] generate reports from optimisation
+
+# Optimiser (rsolnp) options/control list (see rsolnp vignette: https://cran.r-project.org/web/packages/Rsolnp/Rsolnp.pdf)
+rho               <- 1        # penalty weighting scaler / default = 1
+outer.iter        <- 30       # maximum major iterations / default = 400
+inner.iter        <- 30       # maximum minor iterations / default = 800
+delta             <- 1e-7     # relative step size eval. / default = 1e-7
+tol               <- 1e-8     # relative tol. for optim. / default = 1e-8
+trace             <- 1        # print objfunc every iter / default = 1
+
+# Post-optimisation analysis
+Analyses          <- c(F,F,F) # [F,T] edge knockout, node knockout, sensitivity analysis
+optRound_analysis <- 1        # rounds of optmisation in each analysis
+LPSA_Increments   <- 2        # number of increments in LPSA analysis
+
+# ================================================ # 
+# ======= Run the driver with option+cmd+R ======= #
+# ================================================ # 
+
+estim_Result   <<- list() # Initialise global variable of results
+rsolnp_options  <- list(rho=rho,outer.iter=outer.iter,inner.iter=inner.iter,delta=delta,tol=tol,trace=trace) # Collapase optimisation options
+
+# Assign selected model to pknmodel and CNOlist
+if (Selected_Model==1) {
+  model <- system.file("ToyPKNMMB.sif",package="CNORprob")
+  data  <- system.file("ToyDataMMB.csv",package="CNORprob")
+} else if (Selected_Model==2) {
+  model <- system.file("FALCON_Ex1_Model.sif",package="CNORprob")
+  data  <- system.file("FALCON_Ex1_Exp.csv",package="CNORprob")
+} else if (Selected_Model==3) {
+  model <- system.file("FALCON_PDGF_Model.sif",package="CNORprob")
+  data  <- system.file("FALCON_PDGF_Exp.csv",package="CNORprob")
+} else if (Selected_Model==4) {
+  model <- system.file("FALCON_LPL_BT20_Model.sif",package="CNORprob")
+  data  <- system.file("FALCON_LPL_BT20_Exp.csv",package="CNORprob")
+} else if (Selected_Model==5) {
+  model <- system.file("SR_CT_Model.sif",package="CNORprob")
+  data  <- system.file("SR_CT_Exp.csv",package="CNORprob")
+} else if (Selected_Model==6) {
+  model <- system.file("CCl4_Model.sif",package="CNORprob")
+  data  <- system.file("CCl4_Exp_2h.csv",package="CNORprob")
+  # data  <- system.file("CCl4_Exp_48h.csv",package="CNORprob")
+} else if (Selected_Model==7) {
+  model <- system.file("APAP_JNK_CT_Model.sif",package="CNORprob")
+  # model <- system.file("APAP_JNK_CT_Model_KO.sif",package="CNORprob")
+  data  <- system.file("APAP_JNK_CT_Meas.csv",package="CNORprob")
+} else if (Selected_Model==8) {
+  model <- system.file("Raf_pp_model.sif",package="CNORprob")
+  data  <- system.file("Raf_pp_data.csv",package="CNORprob")
+} else {
+  print('::: Please select the model number from the list :::')
+}
+
+pknmodel <- readSIF(model) # build a prior-knowledge network from SIF file
+CNOlist <- CNOlist(data) # build a CNOlist from data file in MIDAS format
+
+# pre-processing based on the selected model
+if (Selected_Model==1) {
+  model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=TRUE, cutNONC=TRUE, verbose=FALSE)
+  estim <- CNORprob_buildModel(CNOlist,model,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+} else {
+  model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=FALSE, cutNONC=FALSE, verbose=FALSE)
+  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+  estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("XOR1_OR_XOR2=MAPK"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+}
+
+# Optimisation
+estim$maxtime <- MaxTime
+estim$optimOptions <- c(rho,outer.iter,inner.iter,delta,tol,trace)
+res <- CNORprob_optimise(estim,optRound_optim,SaveOptResults)
+
+# Plot results
+CNORprob_plotFit(model,CNOlist,estim,res)
+bString <- CNORprob_mapModel(model,estim,res)
+plotModel(model,CNOlist,round(bString,digits=2))
+
+# Post-optimisation analyses
+estim$optRound_analysis <- optRound_analysis
+if (Analyses[1]) { estim_Result  <- CNORprob_edgeKO(model,CNOlist,estim,res) }
+if (Analyses[2]) { estim_Result  <- CNORprob_nodeKO(model,CNOlist,estim,res) }
+if (Analyses[3]) { estim_Result  <- CNORprob_LPSA(model,CNOlist,estim,res,HLbound,LPSA_Increments) }
+
+# ===== End of the script ===== #
+
+```
+
+

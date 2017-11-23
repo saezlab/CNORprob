@@ -1,0 +1,10 @@
+Basal	1	Raf_p_1
+Basal	1	Raf_p_2
+Rafinh	-1	Raf_p_1
+Rafinh	-1	Raf_p_2
+Raf_p_1	1	XOR1
+Raf_p_2	-1	XOR1
+Raf_p_1	-1	XOR2
+Raf_p_2	1	XOR2
+XOR1	1	MAPK
+XOR2	1	MAPK

@@ -1,0 +1,5 @@
+TR:mock:CellLine,TR:Basal,TR:Rafinh,DA:Raf_p_1,DA:Raf_p_2,DA:MAPK,DV:Raf_p_1,DV:Raf_p_2,DV:MAPK
+1,1,0,0,0,0,0,0,0
+1,1,0,10,10,10,1,1,0
+1,1,0.5,10,10,10,0.5,0.5,0.375
+1,1,1,10,10,10,0,0,0

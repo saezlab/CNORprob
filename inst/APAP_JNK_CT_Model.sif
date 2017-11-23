@@ -1,0 +1,15 @@
+Basal	1	PKCa
+Basal	1	AMPK
+Basal	1	PP2C
+Basal	1	JunD
+Basal	1	JNK
+PKCa	1	JNK
+AMPK	-1	JNK
+AMPK	1	JunD
+JNK	-1	JunD
+APAP	1	PKCa
+APAP	-1	AMPK
+SP6	-1	JNK
+SP6	-1	PP2C
+PP2C	-1	AMPK
+dJNK	1	JNK
