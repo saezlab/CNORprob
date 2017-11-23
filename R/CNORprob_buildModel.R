@@ -1,6 +1,12 @@
+#' @title CNORprob_buildModel
+#'
+#' @description Build a probablistic logic model description from pknmodel and CNOlist
+#'
+#' @export
+
 CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,ORlist=NULL,L1Reg=0.01,HLbound=0.5,SSthresh=2e-16,
                                PlotIterations=1,rsolnp_options=list(rho=1,outer.iter=400,inner.iter=800,delta=1e-7,tol=1e-8,trace=1)) {
-  
+
   # ===== Step 1 : Extract data from CNOlist  ==== #
 
   rep.row<-function(x,n){
@@ -9,7 +15,7 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
 
   NrExp <- dim(CellNOptR::getCues(CNOlist))[1]
   Inhibitor_names <- colnames(getInhibitors(CNOlist))
-  
+
   if (is.null(Inhibitor_names)) {
     state_names <- model$namesSpecies
   } else {
@@ -21,13 +27,13 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
   if (is.null(Stimuli_names)) {
     stop(print('At least one stimuli is needed in MIDAS file'))
   }
-  
+
   if (is.null(Inhibitor_names)) {
     Input_names <- Stimuli_names
   } else {
     Input_names <- c(Stimuli_names,Inhibitor_names_with_i)
   }
-  
+
   Input_index <- NULL
   for (counter in 1:length(Input_names)) {
     Input_index <- c(Input_index,which(Input_names[counter]==state_names))
@@ -43,18 +49,18 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
   }
   Output_index <- rep.row(Output_index,dim(getCues(CNOlist))[1])
   Output_vector <- getSignals(CNOlist)[[length(getSignals(CNOlist))]]
-  
+
   SD_vector <- getVariances(CNOlist)[[length(getVariances(CNOlist))]]
-  
+
   # ===== Step 2 Extract interactions from model -> build "Interaction" matrix ==== #
 
   # Preprocess reacID to split AND gate and assign special symbol
-  
+
   # Function replicated from: https://stackoverflow.com/questions/7963898/extracting-the-last-n-characters-from-a-string-in-r
   substrRight <- function(x, n){
     substr(x, nchar(x)-n+1, nchar(x))
   }
-  
+
   ToAdd_ANDreac <- NULL
   Splitted_ANDchar <- NULL
   ANDreac_Idx <- NULL
@@ -66,14 +72,14 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
       ANDreac_Idx <- c(ANDreac_Idx,counter)
     }
   }
-  
+
   # Remove the original reacID with "+" gate and replace it with new splitted reactions
   if (!is.null(ToAdd_ANDreac)) {
     model$reacID_pl <- c(model$reacID[-ANDreac_Idx],ToAdd_ANDreac)
   } else {
     model$reacID_pl <- model$reacID
   }
-    
+
   Splitted_reac <- list()
   Source_reac <- NULL
   Target_reac <- NULL
@@ -83,33 +89,33 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
     Target_reac <- c(Target_reac,Splitted_reac[[counter]][[1]][2])
   }
   Unique_Targets <- unique(Target_reac)
-  
+
   Interactions <- as.data.frame(matrix(NA,length(model$reacID_pl)+length(Inhibitor_names),6))
   Interactions[,5] <- 'N'
   Interactions[,6] <- 'D'
-  
+
   i <- 1
   j <- 0
-  
+
   for (counter in 1:length(Unique_Targets)) {
-      
+
     ReacIdx <- which(Target_reac == Unique_Targets[counter])
-      
+
     if (expandOR) {
 
       # ===== Variant 1 : Assign "OR" gate to all ===== #
       if (length(ReacIdx) > 1) { # if more than 1 interaction per output
         ActIdx <- which(!grepl("!",Source_reac[ReacIdx],fixed = TRUE))
         InhIdx <- which(grepl("!",Source_reac[ReacIdx],fixed = TRUE))
-          
+
         if (length(ActIdx) > 2 || length(InhIdx) > 2) {
-            
+
           # Need to separate interactions into pairs here
-            
-        } 
-          
+
+        }
+
         if (length(ActIdx) == 2) {
-              
+
           for (counter2 in 1:length(ActIdx)) {
             if (grepl("&",Source_reac[ReacIdx[counter2]],fixed = TRUE)) {
               Interactions[i,1] <- substring(Source_reac[ReacIdx[counter2]],2)
@@ -134,9 +140,9 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
           Interactions[i,4] <- paste('k',toString(counter+j),sep="")
           i <- i+1
         }
-            
+
         if (length(InhIdx) == 2) {
-              
+
           for (counter2 in 1:length(ActIdx)) {
             if (grepl("&",Source_reac[ReacIdx[counter2]],fixed = TRUE)) {
               Interactions[i,1] <- substring(Source_reac[ReacIdx[counter2]],2)
@@ -161,7 +167,7 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
           Interactions[i,4] <- paste('k',toString(counter+j),sep="")
           i <- i+1
         }
-            
+
       } else {
         if (grepl("!",Source_reac[ReacIdx],fixed = TRUE)) {
           Interactions[i,1] <- substring(Source_reac[ReacIdx],2)
@@ -175,9 +181,9 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
         i <- i+1
       }
     } else {
-  
+
       if (length(ReacIdx) > 1) { # if more than 1 interaction per output
-          
+
         for (counter2 in 1:length(ReacIdx)) {
           if (grepl("!",Source_reac[ReacIdx[counter2]],fixed = TRUE)) {
             Interactions[i,1] <- substring(Source_reac[ReacIdx[counter2]],2)
@@ -206,11 +212,11 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
         }
         Interactions[i,3] <- Target_reac[ReacIdx]
         Interactions[i,4] <- paste('k',toString(counter+j),sep="")
-        i <- i+1        
+        i <- i+1
       }
-    } 
+    }
   }
-  
+
   # Add explicit inhibitory inteaction as an interaction
   if (!is.null(Inhibitor_names)) {
     for (counter in 1:length(Inhibitor_names)) {
@@ -221,10 +227,10 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
       i <- i+1
     }
   }
-  
+
   # Adding additional OR gate to the Interactions
   OR_idx <- which(Interactions[,5]=="O")
-  if (length(OR_idx)>0) { 
+  if (length(OR_idx)>0) {
     OR_params <- unique(Interactions[OR_idx,4])
     OR_params_idx <- 1
     for (counter in 1:length(OR_params)) {
@@ -241,8 +247,8 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
       OR_params_idx <- OR_params_idx+3
     }
   }
-  
-  
+
+
   # Add manually assigned OR gate interaction
   if (!is.null(ORlist)) {
     ORlistNames <- matrix("NA",length(ORlist),3)
@@ -257,7 +263,7 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
       OR_1stIdx <- which(ORlistNames[counter,1]==Interactions[,1])
       OR_2ndIdx <- which(ORlistNames[counter,2]==Interactions[,1])
       OR_TarIdx <- which(ORlistNames[counter,3]==Interactions[,3])
-      OR_Idx <- c(intersect(OR_1stIdx,OR_TarIdx),intersect(OR_2ndIdx,OR_TarIdx))  
+      OR_Idx <- c(intersect(OR_1stIdx,OR_TarIdx),intersect(OR_2ndIdx,OR_TarIdx))
       if (Interactions[OR_Idx[1],2]==Interactions[OR_Idx[2],2]) { # make sure that the same sign is assigned for OR gate
         Interactions[OR_Idx,5] <- "O"
         Interactions[OR_Idx,4] <- "1"
@@ -266,7 +272,7 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
       }
     }
   }
-  
+
   # If Forced, the weights of all single positive interactions are set to 1 (FALCON)
   if (Force==TRUE) {
     # Grab the interactions with all positive interactions
@@ -280,16 +286,16 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
       }
     }
   }
-  
+
   Interactions_List <- list()
   for (counter in 1:nrow(Interactions)) {
     Interactions_List[[counter]] <- Interactions[counter,]
   }
-  
+
   # ===== Step 3 : Build constraints from the list of interactions ==== #
 
   OptIn <- CNORprob_writeConstraint(Interactions,HLbound,state_names,HardConstraint)
-  
+
   estim                   <<- list()
   estim$Interactions       <- Interactions
   estim$Interactions_List  <- Interactions_List
@@ -318,7 +324,7 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
   estim$L1Reg              <- L1Reg
 
   return(estim)
-  
+
 }
 
 # ======= End of the script ======= #

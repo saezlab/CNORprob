@@ -1,3 +1,9 @@
+#' @title CNORprob_optimise
+#'
+#' @description Optimisation interface between model descriptions 'estim' and the optimiser 'rsolnp'
+#'
+#' @export
+
 CNORprob_optimise = function(estim,optRound=3,SaveOptResults=TRUE) {
 
   options(warn=-1)

@@ -1,3 +1,9 @@
+#' @title CNORprob_LPSA
+#'
+#' @description Systematically run local parameter sensitivity analysis 'LPSA' for each optimised parameter to assess their identifiabilities in the 0 to 1 range
+#'
+#' @export
+
 CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,Force=FALSE) {
 
   optRound_LPSA=estim$optRound_analysis
@@ -11,11 +17,11 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
     HardConstraint <- TRUE
     ExpandOR <- FALSE
   }
-  
+
   estim_orig <<- estim
   A <- estim$A
   Aeq <- estim$Aeq
-  
+
   bestx <- res$BestFitParams
   SSthresh <- estim$SSthresh
 
@@ -57,7 +63,7 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
   Param_original        <- estim$param_vector
   State_names_original  <- estim$state_names
   Interactions_original <- estim$Interactions
-  
+
   MidPoint              <- ceiling(dim(p_SA)[1]/2)
 
   num_plots             <- length(Param_original)
@@ -67,32 +73,32 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
   Ident_All             <- c()
 
   # pb <- tkProgressBar(title = "LPSA analysis", min = 0, max = length(Param_original), width=300)
-  
+
   estim$Input_vector    -> Input_vector
   estim$Input_index     -> Input_index
   estim$Output_vector   -> Output_vector
   estim$Output_index    -> Output_index
   estim$SD_vector       -> SD_vector
-  
+
   for (counter in 1:dim(p_SA)[2]) { # for each parameter
 
     # setTkProgressBar(pb, counter, label=paste( round(counter/length(Param_original)*100, 0), "% done"))
     # setTkProgressBar(pb, counter, label=paste("Running LPSA on parameter:", toString(counter), "/", toString(length(Param_original))))
-    
+
     print("===================================")
     print(paste("Running LPSA on parameter:", toString(counter), "/", toString(length(Param_original))))
     print("===================================")
-    
+
     for (counter2 in 1:dim(p_SA)[1]) {
-        
+
       Interactions <- Interactions_original
-      
+
       Interactions_params <- Interactions[,4]
       replace_idx  <- which(Interactions_params==Param_original[[counter]])
       for (counter3 in 1:length(replace_idx)) {
         Interactions[replace_idx[counter3],4] <- toString(p_SA[counter2, counter])
       }
-      
+
       if (Force==TRUE) {
         # Grab the interactions with all positive interactions
         Pos_IntAct <- which(Interactions[,2]=="->")
@@ -107,24 +113,24 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
       }
 
       state_names <- State_names_original
-      
+
       OptIn <- CNORprob_writeConstraint(Interactions,HLbound,state_names,HardConstraint,LPSA=replace_idx)
 
       # Store all necessary elements into "estim" global variable
-      
+
       L1Reg <- estim_orig$L1Reg
       SSthresh <- estim_orig$SSthresh
       PlotIterations <- estim_orig$PlotIterations
-      
+
       Interactions <- Interactions[-replace_idx,]
-      
+
       if (!is.null(dim(Interactions))) {
         Interactions_List <- list()
         for (counter_List in 1:nrow(Interactions)) {
           Interactions_List[[counter_List]] <- Interactions[counter_List,]
         }
       }
-      
+
       estim                <<- list()
       estim$Interactions_List <- Interactions_List
       estim$Interactions    <- Interactions
@@ -156,15 +162,15 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
       resAll     <- list()
       ElapsedAll <- list()
       cost_LPSA  <- NULL
-      
+
       for (counter_Round in 1:optRound_LPSA) {
         ptm <- proc.time()
-        
+
         tryCatch(
         res <- CNORprob_optimise(estim,optRound=1,SaveOptResults = FALSE)
         ,
         error=function(e) print("Solver failed... continue the next optimisation round"))
-        
+
         if (exists("res")) {
           # print( res$ParamResults )
           cost_LPSA <- rbind(cost_LPSA,c(counter_Round,res$OptResults[1,1]))
@@ -219,9 +225,9 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
   dev.off()
 
   par(mfrow=c(1,1)) # Return the original full plot configuration for the next plot(s)
-  
+
   return(estim_Result)
-  
+
 }
 
 # ======= End of the script ======= #

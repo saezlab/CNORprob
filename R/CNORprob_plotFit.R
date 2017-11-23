@@ -1,3 +1,9 @@
+#' @title CNORprob_plotFit
+#'
+#' @description Plot optimisation results against the experimental data
+#'
+#' @export
+
 CNORprob_plotFit<-function(model, CNOlist, estim, res, show=TRUE, plotPDF=TRUE, tag=NULL, plotParams=list(cex=0.8, cmap_scale=1)) {
 
   if ((class(CNOlist)=="CNOlist")==FALSE){
