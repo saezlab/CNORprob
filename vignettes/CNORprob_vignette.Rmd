@@ -14,7 +14,7 @@ vignette: >
 
 ```{r, message=FALSE, warning=FALSE}
 
-#rm(list=ls()); cat("\014") # clean screen and variables 
+rm(list=ls()); cat("\014") # clean screen and variables 
 
 # Install required packages (if were not previously installed)
 # source("https://bioconductor.org/biocLite.R") 
@@ -36,7 +36,7 @@ library(R.utils) # Timeout control
 # Select model
 # 1 = CNOToy, 2 = FALCON Ex, 3 = PDGF, 4 = L-plastin
 # 5 = SR-crosstalk, 6 = CCl4 IFADO, 7 = APAP-JNK, 8 = pp-Raf XOR
-Selected_Model <- 8
+Selected_Model <- 7
 
 # Assign optimisation and parameter settings
 optRound_optim    <- 1        # rounds of optimisation
@@ -88,6 +88,7 @@ if (Selected_Model==1) {
   data  <- system.file("CCl4_Exp_2h.csv",package="CNORprob")
   # data  <- system.file("CCl4_Exp_48h.csv",package="CNORprob")
 } else if (Selected_Model==7) {
+  # model <- system.file("APAP_JNK_CT_Unfitted_Model.sif",package="CNORprob")
   model <- system.file("APAP_JNK_CT_Model.sif",package="CNORprob")
   # model <- system.file("APAP_JNK_CT_Model_KO.sif",package="CNORprob")
   data  <- system.file("APAP_JNK_CT_Meas.csv",package="CNORprob")
@@ -107,9 +108,9 @@ if (Selected_Model==1) {
   estim <- CNORprob_buildModel(CNOlist,model,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
 } else {
   model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=FALSE, cutNONC=FALSE, verbose=FALSE)
-  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+  estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
   # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-  estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("XOR1_OR_XOR2=MAPK"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("XOR1_OR_XOR2=MAPK"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
 }
 
 # Optimisation
