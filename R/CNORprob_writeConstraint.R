@@ -1,6 +1,6 @@
 #' @title CNORprob_writeConstraint
 #'
-#' @description A function to write constraints for probabilistic logic models before passing to the optimiser
+#' @description Write constraints for probabilistic logic models before passing to the optimiser
 #'
 #' @export
 

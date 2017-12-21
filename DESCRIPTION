@@ -1,15 +1,19 @@
 Package: CNORprob
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: An optimisation toolbox for probabilistic logic networks
+Version: 0.9.0
+Author: Panuwat Trairatphisan
+Maintainer: Panuwat Trairatphisan <panuwat.trairatphisan@outlook.com>
+Description: A variant of CellNOptR toolbox to perform the optimisation of probabilistic logic network
+    principally derived from the Matlab version of FALCON: a toolbox for fast contextualization of networks
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
+Imports: 
+    CellNOptR,
+    Rsolnp,
+    R.utils
 Suggests: knitr,
-    rmarkdown
+    rmarkdown,
 VignetteBuilder: knitr
 RoxygenNote: 6.0.1

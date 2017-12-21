@@ -9,7 +9,6 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-
 # CNORprob (probabilistic logic) package's driver script
 
 ```{r, message=FALSE, warning=FALSE}
@@ -31,12 +30,11 @@ library(CNORprob)
 library(CellNOptR) # for loading network/data and pre-processing
 library(Rsolnp) # optimisation algorithm
 library(R.utils) # Timeout control
-# source("Rscripts/CNORprob_Rscripts.R")
 
 # Select model
 # 1 = CNOToy, 2 = FALCON Ex, 3 = PDGF, 4 = L-plastin
 # 5 = SR-crosstalk, 6 = CCl4 IFADO, 7 = APAP-JNK, 8 = pp-Raf XOR
-Selected_Model <- 7
+Selected_Model <- 1
 
 # Assign optimisation and parameter settings
 optRound_optim    <- 1        # rounds of optimisation
@@ -56,7 +54,7 @@ tol               <- 1e-8     # relative tol. for optim. / default = 1e-8
 trace             <- 1        # print objfunc every iter / default = 1
 
 # Post-optimisation analysis
-Analyses          <- c(F,F,F) # [F,T] edge knockout, node knockout, sensitivity analysis
+Analyses          <- c(T,T,T) # [F,T] edge knockout, node knockout, sensitivity analysis
 optRound_analysis <- 1        # rounds of optmisation in each analysis
 LPSA_Increments   <- 2        # number of increments in LPSA analysis
 
@@ -125,9 +123,10 @@ plotModel(model,CNOlist,round(bString,digits=2))
 
 # Post-optimisation analyses
 estim$optRound_analysis <- optRound_analysis
-if (Analyses[1]) { estim_Result  <- CNORprob_edgeKO(model,CNOlist,estim,res) }
-if (Analyses[2]) { estim_Result  <- CNORprob_nodeKO(model,CNOlist,estim,res) }
-if (Analyses[3]) { estim_Result  <- CNORprob_LPSA(model,CNOlist,estim,res,HLbound,LPSA_Increments) }
+estim_original <- estim
+estim_based <- estim_original; if (Analyses[1]) { estim_Result  <- CNORprob_edgeKO(model,CNOlist,estim_based,res) }
+estim_based <- estim_original; if (Analyses[2]) { estim_Result  <- CNORprob_nodeKO(model,CNOlist,estim_based,res) }
+estim_based <- estim_original; if (Analyses[3]) { estim_Result  <- CNORprob_LPSA(model,CNOlist,estim_based,res,HLbound,LPSA_Increments) }
 
 # ===== End of the script ===== #
 

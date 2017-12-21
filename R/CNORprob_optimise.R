@@ -1,12 +1,12 @@
 #' @title CNORprob_optimise
 #'
-#' @description Optimisation interface between model descriptions 'estim' and the optimiser 'rsolnp'
+#' @description An optimisation interface between model descriptions 'estim' and the optimiser 'rsolnp'
 #'
 #' @export
 
 CNORprob_optimise = function(estim,optRound=3,SaveOptResults=TRUE) {
 
-  options(warn=-1)
+  options(warn=-1) # temporary turn off unnecessary warnings
 
   # Assign optimisation variables from estim
   MaxTime <- estim$maxtime
@@ -37,77 +37,161 @@ CNORprob_optimise = function(estim,optRound=3,SaveOptResults=TRUE) {
     ptm <- proc.time()
     res <- NULL
 
+    # if (length(A)==0 & length(Aeq)==0) {
+    #   tryCatch({ # Use tryCatch to skip failed run(s)
+    #     res <- withTimeout({
+    #               solnp( k,
+    #               CNORprob_optFunc,
+    #               LB=as.vector(LB),
+    #               UB=as.vector(UB),
+    #               control=estim$rsolnp_options)
+    #               }, timeout=MaxTime)
+    #             },
+    #             TimeoutException=function(ex) {
+    #             cat("Timeout. Skipping.\n");
+    #           },
+    #           error=function(e) print("Solver failed... continue the next optimisation round"))
+    #           # warning=function(w) print("Some warnings... continue the optimisation process"))
+    # } else if (length(A)==0 & length(Aeq)!=0) {
+    #   tryCatch({ # Use tryCatch to skip failed run(s)
+    #     res <- withTimeout({
+    #               solnp( k,
+    #               CNORprob_optFunc,
+    #               eqfun=eqn,
+    #               eqB=eqB,
+    #               LB=as.vector(LB),
+    #               UB=as.vector(UB),
+    #               control=estim$rsolnp_options)
+    #               }, timeout=MaxTime)
+    #             },
+    #             TimeoutException=function(ex) {
+    #             cat("Timeout. Skipping.\n");
+    #           },
+    #           error=function(e) print("Solver failed... continue the next optimisation round"))
+    #           # warning=function(w) print("Some warnings... continue the optimisation process"))
+    # } else if (length(A)!=0 & length(Aeq)==0) {
+    #   tryCatch({ # Use tryCatch to skip failed run(s)
+    #     res <- withTimeout({
+    #               solnp( k,
+    #               CNORprob_optFunc,
+    #               ineqfun=ineqn,
+    #               ineqLB=rep(0,length(ineqUB)),
+    #               ineqUB=ineqUB,
+    #               LB=as.vector(LB),
+    #               UB=as.vector(UB),
+    #               control=estim$rsolnp_options)
+    #             }, timeout=MaxTime)
+    #             },
+    #             TimeoutException=function(ex) {
+    #             cat("Timeout. Skipping.\n");
+    #           },
+    #           error=function(e) print("Solver failed... continue the next optimisation round"))
+    #           # warning=function(w) print("Some warnings... continue the optimisation process"))
+    # } else {
+    #   tryCatch({ # Use tryCatch to skip failed run(s)
+    #     res <- withTimeout({
+    #               solnp( k,
+    #               CNORprob_optFunc,
+    #               ineqfun=ineqn,
+    #               ineqLB=rep(0,length(ineqUB)),
+    #               ineqUB=ineqUB,
+    #               eqfun=eqn,
+    #               eqB=eqB,
+    #               LB=as.vector(LB),
+    #               UB=as.vector(UB),
+    #               control=estim$rsolnp_options)
+    #             }, timeout=MaxTime)
+    #             },
+    #             TimeoutException=function(ex) {
+    #             cat("Timeout. Skipping.\n");
+    #           },
+    #           error=function(e) print("Solver failed... continue the next optimisation round"))
+    #           # warning=function(w) print("Some warnings... continue the optimisation process"))
+    # }
+
+
+
+
+
+    # ===== Debugging section ===== #
+
+    # print(estim)
+    estim <<- estim
+
     if (length(A)==0 & length(Aeq)==0) {
-      tryCatch({ # Use tryCatch to skip failed run(s)
+      # tryCatch({ # Use tryCatch to skip failed run(s)
         res <- withTimeout({
-                  solnp( k,
-                  CNORprob_optFunc,
-                  LB=as.vector(LB),
-                  UB=as.vector(UB),
-                  control=estim$rsolnp_options)
-                  }, timeout=MaxTime)
-                },
-                TimeoutException=function(ex) {
-                cat("Timeout. Skipping.\n");
-              },
-              error=function(e) print("Solver failed... continue the next optimisation round"))
-              # warning=function(w) print("Some warnings... continue the optimisation process"))
+          solnp( k,
+                 CNORprob_optFunc,
+                 LB=as.vector(LB),
+                 UB=as.vector(UB),
+                 control=estim$rsolnp_options)
+        }, timeout=MaxTime)
+      # },
+      TimeoutException=function(ex) {
+        cat("Timeout. Skipping.\n");
+      }
+      # error=function(e) print("Solver failed... continue the next optimisation round"))
+      # warning=function(w) print("Some warnings... continue the optimisation process"))
     } else if (length(A)==0 & length(Aeq)!=0) {
-      tryCatch({ # Use tryCatch to skip failed run(s)
+      # tryCatch({ # Use tryCatch to skip failed run(s)
         res <- withTimeout({
-                  solnp( k,
-                  CNORprob_optFunc,
-                  eqfun=eqn,
-                  eqB=eqB,
-                  LB=as.vector(LB),
-                  UB=as.vector(UB),
-                  control=estim$rsolnp_options)
-                  }, timeout=MaxTime)
-                },
-                TimeoutException=function(ex) {
-                cat("Timeout. Skipping.\n");
-              },
-              error=function(e) print("Solver failed... continue the next optimisation round"))
-              # warning=function(w) print("Some warnings... continue the optimisation process"))
+          solnp( k,
+                 CNORprob_optFunc,
+                 eqfun=eqn,
+                 eqB=eqB,
+                 LB=as.vector(LB),
+                 UB=as.vector(UB),
+                 control=estim$rsolnp_options)
+        }, timeout=MaxTime)
+      # },
+      TimeoutException=function(ex) {
+        cat("Timeout. Skipping.\n");
+      }
+      # error=function(e) print("Solver failed... continue the next optimisation round"))
+      # warning=function(w) print("Some warnings... continue the optimisation process"))
     } else if (length(A)!=0 & length(Aeq)==0) {
-      tryCatch({ # Use tryCatch to skip failed run(s)
+      # tryCatch({ # Use tryCatch to skip failed run(s)
         res <- withTimeout({
-                  solnp( k,
-                  CNORprob_optFunc,
-                  ineqfun=ineqn,
-                  ineqLB=rep(0,length(ineqUB)),
-                  ineqUB=ineqUB,
-                  LB=as.vector(LB),
-                  UB=as.vector(UB),
-                  control=estim$rsolnp_options)
-                }, timeout=MaxTime)
-                },
-                TimeoutException=function(ex) {
-                cat("Timeout. Skipping.\n");
-              },
-              error=function(e) print("Solver failed... continue the next optimisation round"))
-              # warning=function(w) print("Some warnings... continue the optimisation process"))
+          solnp( k,
+                 CNORprob_optFunc,
+                 ineqfun=ineqn,
+                 ineqLB=rep(0,length(ineqUB)),
+                 ineqUB=ineqUB,
+                 LB=as.vector(LB),
+                 UB=as.vector(UB),
+                 control=estim$rsolnp_options)
+        }, timeout=MaxTime)
+      # },
+      TimeoutException=function(ex) {
+        cat("Timeout. Skipping.\n");
+      }
+      # error=function(e) print("Solver failed... continue the next optimisation round"))
+      # warning=function(w) print("Some warnings... continue the optimisation process"))
     } else {
-      tryCatch({ # Use tryCatch to skip failed run(s)
+      # tryCatch({ # Use tryCatch to skip failed run(s)
         res <- withTimeout({
-                  solnp( k,
-                  CNORprob_optFunc,
-                  ineqfun=ineqn,
-                  ineqLB=rep(0,length(ineqUB)),
-                  ineqUB=ineqUB,
-                  eqfun=eqn,
-                  eqB=eqB,
-                  LB=as.vector(LB),
-                  UB=as.vector(UB),
-                  control=estim$rsolnp_options)
-                }, timeout=MaxTime)
-                },
-                TimeoutException=function(ex) {
-                cat("Timeout. Skipping.\n");
-              },
-              error=function(e) print("Solver failed... continue the next optimisation round"))
-              # warning=function(w) print("Some warnings... continue the optimisation process"))
+          solnp( k,
+                 CNORprob_optFunc,
+                 ineqfun=ineqn,
+                 ineqLB=rep(0,length(ineqUB)),
+                 ineqUB=ineqUB,
+                 eqfun=eqn,
+                 eqB=eqB,
+                 LB=as.vector(LB),
+                 UB=as.vector(UB),
+                 control=estim$rsolnp_options)
+        }, timeout=MaxTime)
+      # },
+      TimeoutException=function(ex) {
+        cat("Timeout. Skipping.\n");
+      }
+      # error=function(e) print("Solver failed... continue the next optimisation round"))
+      # warning=function(w) print("Some warnings... continue the optimisation process"))
     }
+
+    # ===== Debugging section ===== #
+
 
     if (exists("res")) {
       print( res$pars )
@@ -194,7 +278,7 @@ CNORprob_optimise = function(estim,optRound=3,SaveOptResults=TRUE) {
 
   estim_Result$optimisation <<- res
 
-  options(warn=0)
+  options(warn=0) # turn on warnings
 
   return(res)
 

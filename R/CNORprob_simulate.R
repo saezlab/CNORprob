@@ -1,6 +1,6 @@
 #' @title CNORprob_simulate
 #'
-#' @description Simulation script with a defined set of parameters 'initial guess or optimised'
+#' @description Simulate CNORprob model with a defined set of parameters: either 'initial guess' or 'optimised'
 #'
 #' @export
 
@@ -259,90 +259,8 @@ CNORprob_simulate = function(estim,SimParams,SimIterations) {
   SimResAll$MeanCostAll       <- MeanCostAll
   SimResAll$StdCostAll        <- StdCostAll
 
-
-
   return(SimResAll)
 
-
-
-  # if (SaveIndividualPlots) {
-  #
-  #   # Plot simulated state value mapped on experimental data
-  #
-  #   for (counter in 1:length(state_names)) {
-  #     # Plot experimental data first (in green)
-  #     for (counter_plot in 1:dim(Output_index)[2]) {
-  #       current_counter_plot <- Output_index[1,]
-  #       if (counter==current_counter_plot[counter_plot]) {
-  #         if (length(SD_vector)>0) { # If SD data exist
-  #           plot(1:dim(Output_index)[1],Measurements[,counter_plot],ylim=c(0,1.2),xlab="Experiments",ylab="Mean +/- SD",main=state_names[counter],col="red",pch=16,cex=1.5)
-  #           arrows(1:dim(Output_index)[1],Measurements[,counter_plot]-SD_vector[,counter_plot],1:dim(Output_index)[1],Measurements[,counter_plot]+SD_vector[,counter_plot],length=0.1,angle=90,code=3,col="red")
-  #         } else {
-  #           plot(1:dim(Output_index)[1],Measurements[,counter_plot],ylim=c(0,1.2),xlab="Experiments",ylab="Mean +/- SD",main=state_names[counter],col="red",pch=16,cex=1.5)
-  #         }
-  #       }
-  #     }
-  #     if (sum(counter==current_counter_plot)==0) {
-  #       plot(1:dim(Output_index)[1],MeanStateValueAll[,counter],ylim=c(0,1.2),xlab="Experiments",ylab="Mean +/- SD",main=state_names[counter],col="blue",pch=17,cex=1.5)
-  #     } else {
-  #       points(1:dim(Output_index)[1],MeanStateValueAll[,counter],col="blue",pch=17,cex=1.5)
-  #     }
-  #     arrows(1:dim(Output_index)[1],MeanStateValueAll[,counter]-StdStateValueAll[,counter],1:dim(Output_index)[1],MeanStateValueAll[,counter]+StdStateValueAll[,counter],length=0.1,angle=90,code=3,col="blue")
-  #
-  #     legend("topright",legend=c("Data","Model"),col=c("red","blue"), pch=c(16,17),cex=1.0)
-  #
-  #     dev.print(pdf,paste(state_names[counter],"_plot.pdf",sep=""))
-  #   }
-  # }
-  #
-  #
-  # if (SaveSummarisedPlots) {
-  #
-  #   # Plot all summarised outputs in one figure
-  #
-  #   # Start ploting
-  #   TotalOutput <- dim(estim$Output_vector)[2]
-  #   NLines=ceiling(sqrt(TotalOutput))
-  #   NCols=ceiling(TotalOutput/NLines)
-  #   par(mfrow=c(NLines,NCols),oma=c(0,0,2,0))
-  #   OutputNames <- state_names[estim$Output_index[1,]]
-  #
-  #   MeanStateValueAll_OnlyOutput <- MeanStateValueAll[,estim$Output_index[1,]]
-  #   StdStateValueAll_OnlyOutput <- StdStateValueAll[,estim$Output_index[1,]]
-  #
-  #   for (counter in 1:TotalOutput) {
-  #
-  #     # Plot measurement data
-  #     if (length(SD_vector)>0) { # If SD data exist
-  #       plot(1:dim(Output_index)[1],Measurements[,counter],ylim=c(0,1.2),xlab="Experiments",ylab="Mean +/- SD",main=OutputNames[counter],col="red",pch=16,cex=1.5)
-  #       arrows(1:dim(Output_index)[1],Measurements[,counter]-SD_vector[,counter],1:dim(Output_index)[1],Measurements[,counter]+SD_vector[,counter],length=0.1,angle=90,code=3,col="red")
-  #     } else {
-  #       plot(1:dim(Output_index)[1],Measurements[,counter],ylim=c(0,1.2),xlab="Experiments",ylab="Mean +/- SD",main=OutputNames[counter],col="red",pch=16,cex=1.5)
-  #     }
-  #
-  #     # Plot state values
-  #     points(1:dim(Output_index)[1],MeanStateValueAll_OnlyOutput[,counter],col="blue",pch=17,cex=1.5)
-  #     arrows(1:dim(Output_index)[1],MeanStateValueAll_OnlyOutput[,counter]-StdStateValueAll_OnlyOutput[,counter],1:dim(Output_index)[1],MeanStateValueAll_OnlyOutput[,counter]+StdStateValueAll_OnlyOutput[,counter],length=0.1,angle=90,code=3,col="blue")
-  #
-  #     # legend("topright",legend=c("Data","Model"),col=c("red","blue"), pch=c(16,17),cex=1)
-  #
-  #   }
-  #
-  #   mtext("Summarised Model Fitting",outer=T,cex=1)
-  #
-  #   dev.print(pdf,"Summarised_Model_Fitting.pdf")
-  #
-  #
-  #   par(mfrow=c(1,1)) # Return the original full plot configuration for the next plot(s)
-  #
-  #
-  #   # Plot optimal cost for each experiment
-  #
-  #   plot(1:dim(Output_index)[1],MeanCostAll,xlab="exp",ylab="MSE",main="Mean optimal cost",col=51,pch=17,cex=1.5)
-  #   arrows(1:dim(Output_index)[1],MeanCostAll-StdCostAll,1:dim(Output_index)[1],MeanCostAll+StdCostAll,length=0.1,angle=90,code=3,col=51)
-  #
-  #   dev.print(pdf,"Summarised_Fitting_Cost.pdf")
-  # }
 }
 
 # ======= End of the script ====== #

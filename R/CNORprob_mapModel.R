@@ -33,7 +33,6 @@ CNORprob_mapModel = function(model,estim,res) {
     }
   }
 
-
   bString <- NULL
   for (counter in 1:length(model$reacID)) {
 

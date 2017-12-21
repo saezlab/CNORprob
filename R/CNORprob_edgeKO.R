@@ -1,12 +1,13 @@
 #' @title CNORprob_edgeKO
 #'
-#' @description Systematically knock-out each single edge from the network, run optimisation of each network variants and compare models with fitting costs and AIC
+#' @description Systematically knock-out each single edge from the network, run optimisation of each network variant and compare models with fitting costs and AIC
 #'
 #' @export
 
 CNORprob_edgeKO = function(model,CNOlist,estim,res) {
 
-  estim_orig <<- estim
+  # estim_orig <<- estim
+  estim_orig <- estim
   model_orig <- model # Keep original CNOR model
 
   optRound_KO <- estim$optRound_analysis

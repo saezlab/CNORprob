@@ -1,6 +1,6 @@
 #' @title CNORprob_LPSA
 #'
-#' @description Systematically run local parameter sensitivity analysis 'LPSA' for each optimised parameter to assess their identifiabilities in the 0 to 1 range
+#' @description Systematically run local parameter sensitivity analysis 'LPSA' for each optimised parameter to assess their identifiabilities in the range of 0 to 1
 #'
 #' @export
 
@@ -8,7 +8,7 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
 
   optRound_LPSA=estim$optRound_analysis
   LPSA_Increments=LPSA_Increments
-  if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model with expandOR
+  if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model, then use ExpandOR section
     Force <- FALSE
     HardConstraint <- FALSE
     ExpandOR <- TRUE

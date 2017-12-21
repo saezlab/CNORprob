@@ -103,7 +103,6 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
 
     if (expandOR) {
 
-      # ===== Variant 1 : Assign "OR" gate to all ===== #
       if (length(ReacIdx) > 1) { # if more than 1 interaction per output
         ActIdx <- which(!grepl("!",Source_reac[ReacIdx],fixed = TRUE))
         InhIdx <- which(grepl("!",Source_reac[ReacIdx],fixed = TRUE))
@@ -111,6 +110,9 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
         if (length(ActIdx) > 2 || length(InhIdx) > 2) {
 
           # Need to separate interactions into pairs here
+          stop("The current CNORprob pipeline doesn't support multiple gates assignment.
+          Please consider revising interaction files using a single logical gate e.g.
+          [A 1 T;B 1 T;C 1 T] -> [A 1 AB;B 1 AB;AB 1 T;C 1 T]")
 
         }
 

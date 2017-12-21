@@ -1,6 +1,6 @@
 #' @title CNORprob_optFunc
 #'
-#' @description Main objective function of CNORprob to be optimised with the rsolnp function
+#' @description Main objective function of CNORprob to be optimised using the rsolnp function
 #'
 #' @export
 
@@ -10,7 +10,7 @@ CNORprob_optFunc = function(k) {
   # estim$Interactions  -> Interactions
   estim$Interactions_List -> Interactions
 
-  # # Need to turn Interaction back as a list
+  # # If needed, turn Interaction back as a list
   # if (!is.null(dim(Interactions))) {
   #   Interactions_List <- list()
   #   for (counter in 1:nrow(Interactions)) {
@@ -18,6 +18,8 @@ CNORprob_optFunc = function(k) {
   #   }
   #   Interactions <- Interactions_List
   # }
+
+  # print(estim)
 
   estim$SSthresh      -> SSthresh
   estim$Input_vector  -> Input_vector
@@ -154,6 +156,9 @@ CNORprob_optFunc = function(k) {
   Measurements = Output_vector
 
   diff <- 0
+
+  # print(diff)
+  # print(Measurements)
 
   for (counter_exp in 1:dim(Measurements)[1]) {
     if (counter_exp == 1) {
