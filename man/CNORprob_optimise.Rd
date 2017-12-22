@@ -7,5 +7,5 @@
 CNORprob_optimise(estim, optRound = 3, SaveOptResults = TRUE)
 }
 \description{
-Optimisation interface between model descriptions 'estim' and the optimiser 'rsolnp'
+An optimisation interface between model descriptions 'estim' and the optimiser 'rsolnp'
 }

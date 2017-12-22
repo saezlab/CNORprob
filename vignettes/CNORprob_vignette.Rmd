@@ -34,7 +34,7 @@ library(R.utils) # Timeout control
 # Select model
 # 1 = CNOToy, 2 = FALCON Ex, 3 = PDGF, 4 = L-plastin
 # 5 = SR-crosstalk, 6 = CCl4 IFADO, 7 = APAP-JNK, 8 = pp-Raf XOR
-Selected_Model <- 1
+Selected_Model <- 3
 
 # Assign optimisation and parameter settings
 optRound_optim    <- 1        # rounds of optimisation

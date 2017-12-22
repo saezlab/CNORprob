@@ -7,5 +7,5 @@
 CNORprob_simulate(estim, SimParams, SimIterations)
 }
 \description{
-Simulation script with a defined set of parameters 'initial guess or optimised'
+Simulate CNORprob model with a defined set of parameters: either 'initial guess' or 'optimised'
 }

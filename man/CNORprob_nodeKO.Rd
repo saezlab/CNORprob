@@ -7,5 +7,5 @@
 CNORprob_nodeKO(model, CNOlist, estim, res)
 }
 \description{
-Systematically knock-out each single node from the network, run optimisation of each network variants and compare models with fitting costs and AIC
+Systematically knock-out each single node in the network, run optimisation of each network variant and compare models with fitting costs and AIC
 }

@@ -8,5 +8,5 @@ CNORprob_writeConstraint(Interactions, HLbound, state_names, HardConstraint,
   LPSA = NULL)
 }
 \description{
-A function to write constraints for probabilistic logic models before passing to the optimiser
+Write constraints for probabilistic logic models before passing to the optimiser
 }

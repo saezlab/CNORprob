@@ -7,5 +7,5 @@
 CNORprob_optFunc(k)
 }
 \description{
-Main objective function of CNORprob to be optimised with the rsolnp function
+Main objective function of CNORprob to be optimised using the rsolnp function
 }
