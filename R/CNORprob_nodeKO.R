@@ -44,6 +44,8 @@ CNORprob_nodeKO = function(model,CNOlist,estim,res) {
     print(paste("Knocking down node:", toString(counter), "/", toString(length(p_KD))))
     print("=================================")
 
+    print(model_orig$namesSpecies[counter])
+
     model_KD <- model_orig
 
     # setTkProgressBar(pb, counter, label=paste( round(counter/length(p_KD)*100, 0), "% done"))
@@ -105,6 +107,7 @@ CNORprob_nodeKO = function(model,CNOlist,estim,res) {
         }
       }
       estim$maxtime <- estim_orig$maxtime
+      estim$printCost <- estim_orig$printCost
 
       res <- NULL
 

@@ -37,6 +37,7 @@ CNORprob_optFunc = function(k) {
   estim$NrStates      -> NrStates
   estim$NrParams      -> NrParams
   estim$L1Reg         -> L1Reg
+  estim$printCost     -> printCost
 
   # Assign initial and increments of simulation steps
   n = length(state_names)
@@ -228,7 +229,7 @@ CNORprob_optFunc = function(k) {
   # calculate mean squared error + L1 regularization for non-zero params
   # diff=diff+(sum((xsim-xmeas)^2)/length(xmeas))
   diff=diff+(sum((xsim-xmeas)^2)/length(xmeas))+(L1Reg*sum(k!=0))
-  print(diff)
+  if (printCost == 1) {print(diff)}
   return(diff)
 
 }

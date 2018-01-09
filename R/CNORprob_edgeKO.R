@@ -44,6 +44,8 @@ CNORprob_edgeKO = function(model,CNOlist,estim,res) {
     print(paste("Knocking down parameter:", toString(counter), "/", toString(length(p_KD))))
     print("=================================")
 
+    print(model_orig$reacID[counter])
+
     model_KD <- model_orig
 
     # setTkProgressBar(pb, counter, label=paste( round(counter/length(p_KD)*100, 0), "% done"))
@@ -51,9 +53,6 @@ CNORprob_edgeKO = function(model,CNOlist,estim,res) {
 
     model_KD$reacID <- model$reacID[-counter]
     Target_KOed <- strsplit(x = model$reacID[counter],split = "=")[[1]][2]
-
-    print(model_KD$reacID)
-    print(Target_KOed)
 
     if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model
       estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE)
@@ -79,6 +78,7 @@ CNORprob_edgeKO = function(model,CNOlist,estim,res) {
       }
     }
     estim$maxtime <- estim_orig$maxtime
+    estim$printCost <- estim_orig$printCost
 
     res <- NULL
 

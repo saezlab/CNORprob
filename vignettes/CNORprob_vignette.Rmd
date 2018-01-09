@@ -26,6 +26,8 @@ rm(list=ls()); cat("\014") # clean screen and variables
 # install.packages("R.utils") # Timeout control
 
 # Load prior library and R-scripts
+library(devtools)
+load_all()
 library(CNORprob)
 library(CellNOptR) # for loading network/data and pre-processing
 library(Rsolnp) # optimisation algorithm
@@ -34,7 +36,7 @@ library(R.utils) # Timeout control
 # Select model
 # 1 = CNOToy, 2 = FALCON Ex, 3 = PDGF, 4 = L-plastin
 # 5 = SR-crosstalk, 6 = CCl4 IFADO, 7 = APAP-JNK, 8 = pp-Raf XOR
-Selected_Model <- 3
+Selected_Model <- 1
 
 # Assign optimisation and parameter settings
 optRound_optim    <- 1        # rounds of optimisation
@@ -42,6 +44,7 @@ L1Reg             <- 0.01     # assign weight for L1-regularisation
 MaxTime           <- 180      # time for each round of optimisation [seconds]
 HLbound           <- 0.5      # cut-off for high and low weights
 SSthresh          <- 2e-16    # cut-off for states' difference at steady-state
+printCost         <- 0        # print or not print intermediate fitting cost [0,1]
 PlotIterations    <- 1        # rounds of optimisation to generate plots
 SaveOptResults    <- TRUE     # [TRUE,FALSE] generate reports from optimisation
 
@@ -112,7 +115,7 @@ if (Selected_Model==1) {
 }
 
 # Optimisation
-estim$maxtime <- MaxTime
+estim$maxtime <- MaxTime; estim$printCost <- printCost
 estim$optimOptions <- c(rho,outer.iter,inner.iter,delta,tol,trace)
 res <- CNORprob_optimise(estim,optRound_optim,SaveOptResults)
 

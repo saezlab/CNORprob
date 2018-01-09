@@ -158,6 +158,7 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
       estim$UB              <- OptIn$UB
       estim$L1Reg           <- L1Reg
       estim$maxtime         <- estim_orig$maxtime
+      estim$printCost       <- estim_orig$printCost
 
       resAll     <- list()
       ElapsedAll <- list()
@@ -198,7 +199,9 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
     }
   }
 
+  print("New fitting cost of all parameters")
   print(cost_SA)
+  print("Range of explore parameter values")
   print(params_SA)
   estim_Result$LPSA$cost_SA          <- cost_SA
   estim_Result$LPSA$params_SA        <- params_SA
@@ -225,6 +228,8 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
   dev.off()
 
   par(mfrow=c(1,1)) # Return the original full plot configuration for the next plot(s)
+
+  print("LPSA results are saved as a figure in the Results folder")
 
   return(estim_Result)
 
