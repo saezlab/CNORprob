@@ -15,19 +15,25 @@ vignette: >
 
 rm(list=ls()); cat("\014") # clean screen and variables 
 
-# Install required packages (if were not previously installed)
-# source("https://bioconductor.org/biocLite.R") 
+# # Install required packages (if were not previously installed)
+# source("https://bioconductor.org/biocLite.R")
 # biocLite("CellNOptR") # for loading network/data and pre-processing
-# OR
+# # --- OR --- #
 # install.packages("devtools")
 # library(devtools)
 # install_github('saezlab/CellNOptR/packages/CellNOptR', force=TRUE)
+# 
 # install.packages("Rsolnp") # optimisation algorithm
 # install.packages("R.utils") # Timeout control
 
-# Load prior library and R-scripts
+# # Install CNORprodb from Github (or load library for development version)
+# library(devtools)
+# install_github('saezlab/CellNOptR/packages/CNORprob', force=TRUE)
+# # --- OR --- #
 library(devtools)
 load_all()
+
+# Load prior library and R-scripts
 library(CNORprob)
 library(CellNOptR) # for loading network/data and pre-processing
 library(Rsolnp) # optimisation algorithm
@@ -57,7 +63,7 @@ tol               <- 1e-8     # relative tol. for optim. / default = 1e-8
 trace             <- 1        # print objfunc every iter / default = 1
 
 # Post-optimisation analysis
-Analyses          <- c(T,T,T) # [F,T] edge knockout, node knockout, sensitivity analysis
+Analyses          <- c(T,T,F) # [F,T] edge knockout, node knockout, sensitivity analysis
 optRound_analysis <- 1        # rounds of optmisation in each analysis
 LPSA_Increments   <- 2        # number of increments in LPSA analysis
 
