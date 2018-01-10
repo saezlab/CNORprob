@@ -1,6 +1,8 @@
 # CNORprob
 
-This is a probabilistic logic variant of [CellNOpt](https://www.bioconductor.org/packages/release/bioc/html/CNORode.html) which allows for quantitative optimisation of logical network for (quasi-)steady-state data. The core optimisation pipeline is derived from [FALCON](https://github.com/sysbiolux/FALCON): a toolbox for the fast contextualization of logical networks. CNORprob takes prior knowledge network and experimental data in SIF and MIDAS formats, respectively, and it outputs graphical representation of results in CellNOpt's format. Post-optimisation analyses including systematic edge-knockout, systematic node-knockout, and local parameter sensitivity analyses (LPSA) were also included in the pipeline as offered in the original FALCON toolbox. 
+This is a probabilistic logic variant of [CellNOpt](https://www.bioconductor.org/packages/release/bioc/html/CNORode.html) which allows for quantitative optimisation of logical network for (quasi-)steady-state data. The core optimisation pipeline is derived from [FALCON](https://github.com/sysbiolux/FALCON): a toolbox for the fast contextualization of logical networks.
+
+CNORprob takes prior knowledge network and experimental data in SIF and MIDAS formats, respectively, and it outputs graphical representation of results in CellNOpt's format. Post-optimisation analyses including systematic edge-knockout, systematic node-knockout, and local parameter sensitivity analyses (LPSA) were also included in the pipeline as offered in the original FALCON toolbox. 
 
 ## Getting Started
 
@@ -26,7 +28,7 @@ install.packages("R.utils") # Timeout control
 
 ### Installing
 
-CNORprob is currently available for the installation as a R-package from our GitHub page
+CNORprob is currently available for the installation as an R-package from our GitHub page
 
 ```R
 # Install CNORprob from Github (or load library for development version)
@@ -44,7 +46,9 @@ Several examples are available as the test case for CNORprob. Users can select t
 2) FALCON pipeline example, see [paper](https://academic.oup.com/bioinformatics/article/33/21/3431/3897376)
 3) PDGF (dissecting PDGF signalling in Gastrointestinal Stromal Tumour - GIST), see [paper](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0156223)
 4) L-plastin (investigating L-plastin activating signalling pathways in breast cancer cell lines), see [paper](http://www.fasebj.org/content/30/3/1218.long)
-5)-7) Models under investigation within the framework of the TransQST consortium: Stress-Response (SR) crosstalk, CCl4 induced liver injury and APAP-induced Jnk-Jun crosstalk.
+5) (Under investigation) Stress-Response (SR) crosstalk between oxidative stress and DNA damage response pathways
+6) (Under investigation) CCl4-induced liver injury in mice (in vivo)
+7) (Under investigation) APAP-induced Jnk-Jun crosstalk in hepatocyte (in vitro)
 8) An example of how to model network motif with XOR gate 
 
 ```R
@@ -87,7 +91,13 @@ Subsequent to these assignments, users can further run the rest of the script (v
 
 ### Additonal/Special assignments in CNORprob
 
-Apart from the core setting options above, users can also assign additional features e.g. the preprocessing of prior knowledge network (please refer to the documentation of CellNOpt for more detail) as well as the network constraint options. "CNORprob_buildModel" provide 4 additional variables: "expandOR", "ORlist", HardConstraint" and "Force". "expandOR" refers to the expansion of the OR gate which it was not assigned from the initial list. "ORlist" refers to the introduction of specific OR relationship for specific interaction e.g. 'Grb2SoS_OR_GabSOS=GGSOS' for PDGF model. "HardConstraint" refers to the assignment that the sum of all weights/probabilities for all incoming activation reactions to be 1 (might be too strict for some cases). Finally "Force" refers to the assignment of weight/probability for a single activated to always be 1 (might also be too strict for several cases).
+Apart from the core setting options above, users can also assign additional features e.g. the preprocessing of prior knowledge network (please refer to the documentation of CellNOpt for more detail) as well as the network constraint.
+
+"CNORprob_buildModel" provide 4 additional variables: 
+1) "expandOR" refers to the expansion of the OR gate which it was not assigned from the initial list. 
+2) "ORlist" refers to the introduction of specific OR relationship for specific interaction e.g. 'Grb2SoS_OR_GabSOS=GGSOS' for PDGF model. 
+3) "HardConstraint" refers to the assignment that the sum of all weights/probabilities for all incoming activation reactions to be 1 (might be too strict for some cases). 
+4) "Force" refers to the assignment of weight/probability for a single activated to always be 1 (might also be too strict for several cases).
 
 ```R
 # Preprocessing (please see CellNopt documentation)
@@ -103,7 +113,7 @@ Panuwat Trairatphisan (panuwat.trairatphisan -at - gmail.com)
 
 See also the list of [contributors](https://github.com/saezlab/CNORprob/contributors) who participated in this project.
 
-### Reference and Acknowledgement
+## Acknowledgement
 
 CNORprob have been developed for the modelling projects within the [TransQST Consortium](https://transqst.org)
 
