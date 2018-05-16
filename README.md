@@ -113,6 +113,16 @@ Panuwat Trairatphisan (panuwat.trairatphisan -at - gmail.com)
 
 See also the list of [contributors](https://github.com/saezlab/CNORprob/contributors) who participated in this project.
 
+## License
+
+Distributed under the GNU GPLv3 License. See accompanying file [LICENSE.txt](https://github.com/saezlab/combiMS/blob/master/LICENSE.txt) or copy at [http://www.gnu.org/licenses/gpl-3.0.html](http://www.gnu.org/licenses/gpl-3.0.html).
+
+## References
+
+[De Landtsheer et al.](https://academic.oup.com/bioinformatics/article/33/21/3431/3897376):
+
+> De Landtsheer S, Trairatphisan P, Lucarelli P, and Sauter, T. (2017). FALCON: a toolbox for the fast contextualization of logical networksa. *Bioinformatics*, Volume 33, Issue 21, 1 November 2017, Pages 3431–3436, https://doi.org/10.1093/bioinformatics/btx380.
+
 ## Acknowledgement
 
 CNORprob have been developed for the modelling projects within the [TransQST Consortium](https://transqst.org)
