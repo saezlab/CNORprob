@@ -4,7 +4,7 @@
 #'
 #' @export
 
-CNORprob_plotFit<-function(model, CNOlist, estim, res, show=TRUE, plotPDF=TRUE, tag=NULL, plotParams=list(cex=0.8, cmap_scale=1)) {
+CNORprob_plotFit<-function(model, CNOlist, estim, res, show=TRUE, plotPDF=TRUE, tag=NULL, plotParams=list(cex=0.8, cmap_scale=1, yMin=0)) {
 
   if ((class(CNOlist)=="CNOlist")==FALSE){
     CNOlist = CellNOptR::CNOlist(CNOlist)
@@ -14,7 +14,8 @@ CNORprob_plotFit<-function(model, CNOlist, estim, res, show=TRUE, plotPDF=TRUE, 
   SimIterations <- 3
   SimResAll     <- CNORprob_simulate(estim,SimParams,SimIterations)
   OutputIdx     <- estim$Output_index[1,]
-  simResults    <- list(t0=matrix(data=0,nrow=dim(SimResAll$MeanStateValueAll[,OutputIdx])[1],ncol=dim(SimResAll$MeanStateValueAll[,OutputIdx])[2]),t1=SimResAll$MeanStateValueAll[,OutputIdx])
+  # simResults    <- list(t0=matrix(data=0,nrow=dim(SimResAll$MeanStateValueAll[,OutputIdx])[1],ncol=dim(SimResAll$MeanStateValueAll[,OutputIdx])[2]),t1=SimResAll$MeanStateValueAll[,OutputIdx])
+  simResults    <- list(t0=CNOlist@signals[[1]],t1=SimResAll$MeanStateValueAll[,OutputIdx])
 
   if (show == TRUE){
     plotOptimResultsPan(
