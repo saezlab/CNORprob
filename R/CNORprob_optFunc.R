@@ -39,6 +39,14 @@ CNORprob_optFunc = function(k) {
   estim$L1Reg         -> L1Reg
   estim$printCost     -> printCost
 
+  if (!is.null(estim$BS_Type)) {
+    if (estim$BS_Type==1) {
+      estim$BS_Type -> BS_Type
+      estim$ReorderedBS -> ReorderedBS
+      estim$BS_Counter -> BS_Counter
+    }
+  }
+
   # Assign initial and increments of simulation steps
   n = length(state_names)
 
@@ -165,9 +173,11 @@ CNORprob_optFunc = function(k) {
     if (counter_exp == 1) {
       x <- runif(n,min=0,max=1)
       x[Input_index[counter_exp,]] <- Inputs[counter_exp,]
+      # x[Output_index[counter_exp,]] <- Measurements[counter_exp,]
     } else {
       x <- rbind(x,runif(n,min=0,max=1))
       x[counter_exp,c(Input_index[counter_exp,])] <- Inputs[counter_exp,]
+      # x[counter_exp,c(Output_index[counter_exp,])] <- Measurements[counter_exp,]
     }
   }
 
@@ -228,8 +238,18 @@ CNORprob_optFunc = function(k) {
 
   # calculate mean squared error + L1 regularization for non-zero params
   # diff=diff+(sum((xsim-xmeas)^2)/length(xmeas))
-  diff=diff+(sum((xsim-xmeas)^2)/length(xmeas))+(L1Reg*sum(k!=0))
+
+  SSE <- xsim-xmeas
+  if (!is.null(estim$BS_Type)) {
+    if (estim$BS_Type==1) {
+      SSE <- as.vector(SSE)
+      SSE <- SSE[ReorderedBS[BS_Counter,]]
+    }
+  }
+  # diff=diff+(sum((xsim-xmeas)^2)/length(xmeas))+(L1Reg*sum(k!=0))
+  diff=diff+(sum((SSE)^2)/length(xmeas))+(L1Reg*sum(k!=0))
   if (printCost == 1) {print(diff)}
   return(diff)
+
 
 }

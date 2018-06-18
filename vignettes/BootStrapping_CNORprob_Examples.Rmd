@@ -1,0 +1,166 @@
+---
+title: "Bootstrapping pipeline for CNORprob"
+author: "Panuwat Trairatphisan"
+date: "18/6/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Key ideas
+
+##### Fede's approach
+* Bootstrap at residual level
+* Position of paired simulated/measurement are randomised
+* Also works when no information on variance is available
+
+##### Resampling data
+* Bootstrap at original data level (in CNOlist)
+* New sets of data are de novo sampled from the assumed normal distribution around mean value and variance 
+* Only works when information on variance (on CNOlist$valueVariances) is available
+
+#### Load library and script
+
+```{r, message=FALSE, warning=FALSE}
+rm(list=ls());cat("\014");if(length(dev.list())>0){dev.off()}
+# # Install required packages (if were not previously installed)
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("CellNOptR") # for loading network/data and pre-processing
+# # --- OR --- #
+# install.packages("devtools")
+# library(devtools)
+# install_github('saezlab/CellNOptR/packages/CellNOptR', force=TRUE)
+# 
+# install.packages("Rsolnp") # optimisation algorithm
+# install.packages("R.utils") # Timeout control
+
+# # Install CNORprodb from Github (or load library for development version)
+# library(devtools)
+# install_github('saezlab/CellNOptR/packages/CNORprob', force=TRUE)
+# # --- OR --- #
+library(devtools)
+load_all()
+
+# Load prior library and R-scripts
+library(CNORprob)
+library(CellNOptR) # for loading network/data and pre-processing
+library(Rsolnp) # optimisation algorithm
+library(R.utils) # Timeout control
+```
+
+#### Set optimisation options
+
+```{r, message=FALSE, warning=FALSE}
+
+# Assign optimisation and parameter settings
+optRound_optim    <- 3        # rounds of optimisation
+# L1Reg             <- 0.01     # assign weight for L1-regularisation
+L1Reg             <- 0     # assign weight for L1-regularisation
+MaxTime           <- 180      # time for each round of optimisation [seconds]
+HLbound           <- 0.5      # cut-off for high and low weights
+SSthresh          <- 2e-16    # cut-off for states' difference at steady-state
+printCost         <- 0        # print or not print intermediate fitting cost [0,1]
+PlotIterations    <- 1        # rounds of optimisation to generate plots
+SaveOptResults    <- TRUE     # [TRUE,FALSE] generate reports from optimisation
+
+# Optimiser (rsolnp) options/control list (see rsolnp vignette: https://cran.r-project.org/web/packages/Rsolnp/Rsolnp.pdf)
+rho               <- 1        # penalty weighting scaler / default = 1
+outer.iter        <- 50       # maximum major iterations / default = 400
+inner.iter        <- 50       # maximum minor iterations / default = 800
+delta             <- 1e-7     # relative step size eval. / default = 1e-7
+tol               <- 1e-8     # relative tol. for optim. / default = 1e-8
+trace             <- 1        # print objfunc every iter / default = 1
+
+# Post-optimisation analysis
+Analyses          <- c(F,F,F,T) # [F,T] edge knockout, node knockout, sensitivity analysis
+optRound_analysis <- 1        # rounds of optmisation in each analysis
+LPSA_Increments   <- 2        # number of increments in LPSA analysis
+BS_Type           <- 1        # Type of Bootstrapping [1=resample with replacement from residual; 2=resampling from mean & variant]
+BS_Round          <- 10       # number of rounds for bootstrapping
+
+estim_Result   <<- list() # Initialise global variable of results
+rsolnp_options  <- list(rho=rho,outer.iter=outer.iter,inner.iter=inner.iter,delta=delta,tol=tol,trace=trace) # Collapase optimisation options
+
+```
+
+
+#### Load model and dataset + preprocess network
+
+```{r, message=FALSE, warning=FALSE}
+model <- system.file("ToyPKNMMB.sif",package="CNORprob")
+data  <- system.file("ToyDataMMB.csv",package="CNORprob")
+pknmodel <- readSIF(model) # build a prior-knowledge network from SIF file
+CNOlist <- CNOlist(data) # build a CNOlist from data file in MIDAS format
+model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=TRUE, cutNONC=TRUE, verbose=FALSE)
+estim <- CNORprob_buildModel(CNOlist,model,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+```
+
+#### Run optimisation
+
+```{r, message=FALSE, warning=FALSE}
+
+estim$maxtime <- MaxTime; estim$printCost <- printCost
+estim$optimOptions <- c(rho,outer.iter,inner.iter,delta,tol,trace)
+res <- CNORprob_optimise(estim,optRound_optim,SaveOptResults)
+
+```
+
+#### Plot data with optimised parameters
+
+```{r, message=FALSE, warning=FALSE}
+
+CNORprob_plotFit(model,CNOlist,estim,res,show=TRUE, plotPDF=TRUE, tag=NULL, plotParams=list(cex=0.8, cmap_scale=1, ymin=0))
+bString <- CNORprob_mapModel(model,estim,res)
+plotModel(model,CNOlist,round(bString,digits=2))
+
+```
+
+#### Set parameters for post-optimisation analyses
+
+```{r, message=FALSE, warning=FALSE}
+
+estim$optRound_analysis <- optRound_analysis
+estim$BS_Type <- BS_Type
+estim$BS_Round <- BS_Round
+estim_original <- estim
+
+```
+
+## Pipeline 1: Fede's approach
+
+#### Load new scripts and run optimisation
+
+```{r, message=FALSE, warning=FALSE}
+
+BS_Type           <- 1        # Type of Bootstrapping [1=resample with replacement from residual; 2=resampling from mean & variant]
+BS_Round          <- 10       # number of rounds for bootstrapping
+estim$BS_Type <- BS_Type
+estim$BS_Round <- BS_Round
+estim_original <- estim
+estim_based <- estim_original
+estim_Result  <- CNORprob_BS(model,CNOlist,estim_based,res,BS_Type,BS_Round)
+
+```
+
+## Pipeline 2: Resample data from mean and variance (CNOlist)
+
+#### Load new scripts and run optimisation
+
+```{r, message=FALSE, warning=FALSE}
+BS_Type           <- 2        # Type of Bootstrapping [1=resample with replacement from residual; 2=resampling from mean & variant]
+BS_Round          <- 10       # number of rounds for bootstrapping
+estim$BS_Type <- BS_Type
+estim$BS_Round <- BS_Round
+estim_original <- estim
+estim_based <- estim_original 
+estim_Result  <- CNORprob_BS(model,CNOlist,estim_based,res,BS_Type,BS_Round)
+
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+print("--- End of the script ---")
+```
+
