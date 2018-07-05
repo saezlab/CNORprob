@@ -63,12 +63,15 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
 
   ToAdd_ANDreac <- NULL
   Splitted_ANDchar <- NULL
+  Splitted_ANDcharEQ <- NULL
   ANDreac_Idx <- NULL
   for (counter in 1:length(model$reacID)) {
     if (grepl("+",model$reacID[counter],fixed = TRUE)) {
-      Splitted_ANDchar[[counter]] <- strsplit(model$reacID[counter],split = "+")
-      ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste("&",Splitted_ANDchar[[counter]][[1]][1],"=",substrRight(model$reacID[counter],1),sep="")),
-                             paste("&",Splitted_ANDchar[[counter]][[1]][3],"=",substrRight(model$reacID[counter],1),sep=""))
+      # Splitted_ANDchar[[counter]] <- strsplit(model$reacID[counter],split = "+") # Fixed 05.07.18
+      Splitted_ANDchar[[counter]] <- strsplit(model$reacID[counter],split = "+",fixed = T)
+      Splitted_ANDcharEQ[[counter]] <- strsplit(Splitted_ANDchar[[counter]][[1]][2],split = "=",fixed = T)
+      ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste("&",Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep="")),
+                             paste("&",Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep=""))
       ANDreac_Idx <- c(ANDreac_Idx,counter)
     }
   }
