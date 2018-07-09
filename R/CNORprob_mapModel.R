@@ -34,17 +34,47 @@ CNORprob_mapModel = function(model,estim,res) {
   }
 
   bString <- NULL
+  AND_NOT_Idx <- NULL
+  AND_NOT_IntAct <- NULL
+  AND_NOT_Names <- NULL
+
   for (counter in 1:length(model$reacID)) {
 
     # Clarify AND gate first
     if (grepl("+",Source_reac[counter],fixed = TRUE)) {
-      Source_AND_Names_plus <- strsplit(Source_reac[counter],split = "+")
-      Source_AND_Names <- Source_AND_Names_plus[[1]][c(1,3)]
+      # Debugged 08.07.18
+      # Source_AND_Names_plus <- strsplit(Source_reac[counter],split = "+")
+      # Source_AND_Names <- Source_AND_Names_plus[[1]][c(1,3)]
+      Source_AND_Names <- strsplit(Source_reac[counter],split = "+",fixed=TRUE)
       Source_Idx <- NULL
-      for (counter_AND in 1:length(Source_AND_Names)) {
-        Source_Idx <- c(Source_Idx,which(Source_AND_Names[counter_AND]==estim$Interactions[,1]))
+
+      if (sum(grepl(pattern = "!",x = Source_AND_Names[[1]],fixed = T))==0) {
+        grepl("+",Source_reac[counter],fixed = TRUE)
+
+        for (counter_AND in 1:length(Source_AND_Names[[1]])) {
+          Source_Idx <- c(Source_Idx,which((Source_AND_Names[[1]][counter_AND]==estim$Interactions[,1]) & Target_reac[counter]==estim$Interactions[,3]))
+        }
+        IntAct_Idx <- Source_Idx[1] # Take either the 1st or 2nd index (should be the same)
+
+      } else {
+
+        AND_NOT_Idx <- c(AND_NOT_Idx, counter)
+        AND_NOT_Names <- rbind(AND_NOT_Names, c(Source_AND_Names[[1]],Target_reac[counter]))
+        # remove ! from the list of inputs (if any)
+        for (counter_src in 1:length(Source_AND_Names[[1]])) {
+          if (grepl(pattern = "!",x = Source_AND_Names[[1]][counter_src],fixed = T)) {
+            Source_AND_Names[[1]][counter_src] <- substr(x = Source_AND_Names[[1]][counter_src],start = 2,stop = nchar(Source_AND_Names[[1]][counter_src]))
+          }
+        }
+        for (counter_AND in 1:length(Source_AND_Names[[1]])) {
+          Source_Idx <- c(Source_Idx,which((Source_AND_Names[[1]][counter_AND]==estim$Interactions[,1]) & Target_reac[counter]==estim$Interactions[,3]))
+        }
+        IntAct_Idx <- NA # Take either the 1st or 2nd index (should be the same)
+        AND_NOT_IntAct <- rbind(AND_NOT_IntAct, Source_Idx)
+
       }
-      IntAct_Idx <- Source_Idx[1] # Take either the 1st or 2nd index (should be the same)
+
+
     } else {
 
       if (grepl("!",Source_reac[counter],fixed = TRUE)) {
@@ -91,17 +121,39 @@ CNORprob_mapModel = function(model,estim,res) {
     }
 
     Current_Param <- estim$Interactions[IntAct_Idx,4]
-    if (is.na(as.numeric(Current_Param)>0)) {
-      Current_Param_Idx <- which(Current_Param==estim$param_vector)
-      Current_Param_Val <- res$BestFitParams[Current_Param_Idx]
+    if (sum(!is.na(Current_Param))) {
+      if (is.na(as.numeric(Current_Param)>0)) {
+        Current_Param_Idx <- which(Current_Param==estim$param_vector)
+        Current_Param_Val <- res$BestFitParams[Current_Param_Idx]
+      } else {
+        Current_Param_Val <- as.numeric(Current_Param)
+      }
     } else {
-      Current_Param_Val <- as.numeric(Current_Param)
+      Current_Param_Val = NA
     }
 
     bString <- c(bString, Current_Param_Val)
   }
 
-  return(bString)
+
+  # Map back all results from AND NOT gate (if any)
+  if (!is.null(AND_NOT_Idx)) {
+    for (counter_retake in 1:length(AND_NOT_Idx)) {
+      for (counter_mapANDNOT in 1:2) {
+        model$reacID <- c(model$reacID,paste0(AND_NOT_Names[counter_retake,counter_mapANDNOT],"=",AND_NOT_Names[counter_retake,3]))
+        Current_Param <- estim$Interactions[AND_NOT_IntAct[counter_retake,counter_mapANDNOT],4]
+        Current_Param_Idx <- which(Current_Param==estim$param_vector)
+        Current_Param_Val <- res$BestFitParams[Current_Param_Idx]
+        bString <- c(bString, Current_Param_Val)
+      }
+    }
+    model$reacID <- model$reacID[-AND_NOT_Idx]
+    bString <- bString[-AND_NOT_Idx]
+  }
+
+  MappedProb <- list(bString=bString,model=model)
+
+  return(MappedProb)
 
 }
 

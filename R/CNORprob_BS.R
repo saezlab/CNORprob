@@ -4,7 +4,7 @@
 #'
 #' @export
 
-CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round) {
+CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round,AddSD=0.05,SeedNr=NULL) {
 
   estim_orig <<- estim
   model_orig <- model # Keep original CNOR model
@@ -21,13 +21,15 @@ CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round) {
   if (BS_Type==1) {
     ReorderedBS <- NULL
     for (counter in 1:BS_Round) {
-      # set.seed(counter) # Optional
+      if (!is.null(SeedNr)) {
+        set.seed(SeedNr) # Optional
+      }
       ReorderedBS <- rbind(ReorderedBS, sample(x = 1:length(estim$Output_vector),size = length(estim$Output_vector), replace = T))
     }
     estim$ReorderedBS <- ReorderedBS
 
   } else if (BS_Type==2) {
-    AddSD=0.05
+    AddSD=AddSD
     rnorm2 <- function(n,mean,sd) { mean+sd*scale(rnorm(n)) }
     if (sum(estim$SD_vector,na.rm = T)==0) {
       estim$SD_vector <- matrix(rep(AddSD,length(estim$SD_vector)),nrow(estim$SD_vector),ncol(estim$SD_vector))
@@ -52,7 +54,6 @@ CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round) {
   }
 
 
-  # for (counter in  1:length(p_KD)) {
   for (counter in  1:BS_Round) {
 
     print("=================================")
@@ -73,7 +74,7 @@ CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round) {
     }
 
     tryCatch(
-      res <- CNORprob_optimise(estim,optRound=1)
+      res <- CNORprob_optimise(estim,optRound=1,DispOptResults=FALSE)
     ,
     error=function(e) print("Solver failed... continue the next optimisation round"))
 
@@ -94,7 +95,7 @@ CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round) {
   # Plot figures
   estim <- estim_orig
 
-  pdf("FitCost_Bootstrapping.pdf")
+  pdf(paste0("FitCost_BS_CNORprob_Type",BS_Type,".pdf"))
   boxplot(x = cost_BS, outpch = NA,main="Fitting Cost Bootstrapping")
   stripchart(x = cost_BS,
              vertical = TRUE, method = "jitter",
@@ -109,14 +110,19 @@ CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round) {
              add = TRUE)
 
   res$BestFitParams <- colMeans(param_BS)
-  bString <- CNORprob_mapModel(model,estim,res)
-  pdf("FitParam_Bootstrapping.pdf")
-  plotModel(model=model,CNOlist = CNOlist,bString = bString)
+  # bString <- CNORprob_mapModel(model,estim,res)
+  MappedProb <- CNORprob_mapModel(optmodel,estim,res)
+
+  pdf(paste0("FitParam_BS_CNORprob_Type",BS_Type,".pdf"))
+  # plotModel(model=model,CNOlist = CNOlist,bString = bString)
+  plotModel(MappedProb$model,optCNOlist,round(MappedProb$bString,digits=2))
   dev.off()
-  plotModel(model=model,CNOlist = CNOlist,bString = bString)
+  # plotModel(model=model,CNOlist = CNOlist,bString = bString)
+  plotModel(MappedProb$model,optCNOlist,round(MappedProb$bString,digits=2))
 
   estim_Result$BS$Cost_BS      <- cost_BS
-  estim_Result$BS$BS_param     <- bString
+  # estim_Result$BS$BS_param     <- bString
+  estim_Result$BS$BS_param     <- MappedProb$bString
   estim_Result                <<- estim_Result
   estim                       <<- estim_orig
   estim                       <<- estim

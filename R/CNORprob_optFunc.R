@@ -77,8 +77,9 @@ CNORprob_optFunc = function(k) {
     process_param_index <- process_param_index[-c(IdxFixVal),] # Remove interactions with fixed values
     IdxFixVal_BL <- rep(FALSE,length(FixBool))
     IdxFixVal_BL[IdxFixVal] <- TRUE
-    if (intersect(IdxFixVal_BL,FixBool)) {
-      process_FixBool <- process_FixBool[-c(IdxFixVal)]
+    # if (intersect(IdxFixVal_BL,FixBool)) {
+    if (sum(IdxFixVal_BL & FixBool)>0) { # Check if Fix Boolean value are picked
+      process_FixBool <- process_FixBool[-c(IdxFixVal)] # Then remove Boolean interactions with fixed value
     }
   }
 

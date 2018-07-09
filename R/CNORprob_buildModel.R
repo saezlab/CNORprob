@@ -13,7 +13,7 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
     matrix(rep(x,each=n),nrow=n)
   }
 
-  NrExp <- dim(CellNOptR::getCues(CNOlist))[1]
+  NrExp <- dim(getCues(CNOlist))[1]
   Inhibitor_names <- colnames(getInhibitors(CNOlist))
 
   if (is.null(Inhibitor_names)) {
@@ -70,9 +70,21 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
       # Splitted_ANDchar[[counter]] <- strsplit(model$reacID[counter],split = "+") # Fixed 05.07.18
       Splitted_ANDchar[[counter]] <- strsplit(model$reacID[counter],split = "+",fixed = T)
       Splitted_ANDcharEQ[[counter]] <- strsplit(Splitted_ANDchar[[counter]][[1]][2],split = "=",fixed = T)
-      ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste("&",Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep="")),
-                             paste("&",Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep=""))
-      ANDreac_Idx <- c(ANDreac_Idx,counter)
+      # Check for AND NOT gate -> equal to default combined positive/negative gate in CNORprob
+      if (length(grep("!",Splitted_ANDchar[[counter]][[1]][1],fixed=T))==0 & length(grep("!",Splitted_ANDcharEQ[[counter]][[1]][1],fixed=T))==0) {
+        ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste("&",Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep="")),
+                               paste("&",Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep=""))
+        ANDreac_Idx <- c(ANDreac_Idx,counter)
+      } else {
+        if (length(grep("!",Splitted_ANDchar[[counter]][[1]][1],fixed=T))!=0) {
+          ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste(Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep=""),
+                                                     paste(Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep="")))
+        } else {
+          ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste(Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep=""),
+                                                     paste(Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep="")))
+        }
+        ANDreac_Idx <- c(ANDreac_Idx,counter)
+      }
     }
   }
 
@@ -83,6 +95,7 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
     model$reacID_pl <- model$reacID
   }
 
+  # Start preparing the internal interaction file for CNORprob
   Splitted_reac <- list()
   Source_reac <- NULL
   Target_reac <- NULL
@@ -115,7 +128,8 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
           # Need to separate interactions into pairs here
           stop("The current CNORprob pipeline doesn't support multiple gates assignment.
           Please consider revising interaction files using a single logical gate e.g.
-          [A 1 T;B 1 T;C 1 T] -> [A 1 AB;B 1 AB;AB 1 T;C 1 T]")
+          [A 1 T;B 1 T;C 1 T] -> [A 1 AB;B 1 AB;AB 1 T;C 1 T]
+          AND Please do not use expandGate during pre-processing step in CNORprob pipelien")
 
         }
 
@@ -277,6 +291,26 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
       }
     }
   }
+
+  # Check if there is any node with only inhibitory edge -> automatically add basal activity
+  AllOutput <- unique(Interactions[,3])
+  kb_idx <- 1
+  for (counter in 1:length(AllOutput)) {
+    OutAct <- which(AllOutput[counter]==Interactions[,3] & Interactions[,2]=="->")
+    OutInb <- which(AllOutput[counter]==Interactions[,3] & Interactions[,2]=="-|")
+    if (length(OutAct)==0 & length(OutInb)>0) { # if there is only inhibitory interaction to a single node -> add positive basal interaction
+      Interactions <- rbind(Interactions,c("basal","->",AllOutput[counter],paste0("kb",kb_idx),"N","D"))
+      if (kb_idx==1) {
+        state_names <- c(state_names,"basal")
+        Input_names <- c(Input_names,"basal")
+        Input_index <- cbind(Input_index,rep(which(state_names=="basal"),nrow(Input_index)))
+        Input_vector <- cbind(Input_vector,rep(1,nrow(Input_index)))
+        colnames(Input_vector)[ncol(Input_vector)] <- "basal"
+      }
+      kb_idx <- kb_idx+1
+    }
+  }
+
 
   # If Forced, the weights of all single positive interactions are set to 1 (FALCON)
   if (Force==TRUE) {
