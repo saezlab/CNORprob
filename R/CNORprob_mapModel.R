@@ -4,7 +4,7 @@
 #'
 #' @export
 
-CNORprob_mapModel = function(model,estim,res) {
+CNORprob_mapModel = function(model,CNOlist,estim,res) {
 
   Splitted_reac <- list()
   Source_reac <- NULL
@@ -14,6 +14,46 @@ CNORprob_mapModel = function(model,estim,res) {
     Source_reac <- c(Source_reac,Splitted_reac[[counter]][[1]][1])
     Target_reac <- c(Target_reac,Splitted_reac[[counter]][[1]][2])
   }
+
+  # BasalIdx <- which("basal"==Source_reac)
+  #
+  # options(warn = 1)
+  #
+  # if (length(BasalIdx)>0) {
+  #   Source_reac <- Source_reac[-BasalIdx]
+  #   Target_reac <- Target_reac[-BasalIdx]
+  #
+  #   model$reacID <- model$reacID[-BasalIdx]
+  #   model$namesSpecies <- model$namesSpecies[-which("basal"==model$namesSpecies)]
+  #   model$interMat <- model$interMat[,-BasalIdx]
+  #   model$interMat <- model$interMat[-which("basal"==rownames(model$interMat)),]
+  #   model$notMat <- model$notMat[,-BasalIdx]
+  #   model$notMat <- model$notMat[-which("basal"==rownames(model$notMat)),]
+  #
+  #   CNOlist@cues <- as.matrix(CNOlist@cues[,-which("basal"==colnames(CNOlist@cues))])
+  #   CNOlist@stimuli <- as.matrix(CNOlist@stimuli[,-which("basal"==colnames(CNOlist@stimuli))])
+  #
+  #   print("==================")
+  #
+  #   print("Note - The node 'basal' and all associated interactions were removed from visualisation")
+  #
+  #   print("==================")
+  #
+  # }
+
+  print("==================")
+  # warning("Note - Two separated interactions coming to a single node represent a 'competitive interaction'
+  #         in CNORprob and not the 'OR' gate like the standard representation. Please refer to
+  #         the original article of 'FALCON' which CNORprob was based on for more information.")
+
+  print("Note - Two separated interactions coming to a single node represent a 'competitive interaction'")
+  print("in CNORprob and not the 'OR' gate like the standard representation. Please refer to ")
+  print("the original article of 'FALCON' which CNORprob was based on for more information.")
+
+
+  print("==================")
+
+  options(warn = 0)
 
   Unique_Targets <- unique(Target_reac)
 
@@ -133,6 +173,7 @@ CNORprob_mapModel = function(model,estim,res) {
     }
 
     bString <- c(bString, Current_Param_Val)
+
   }
 
 
@@ -151,7 +192,7 @@ CNORprob_mapModel = function(model,estim,res) {
     bString <- bString[-AND_NOT_Idx]
   }
 
-  MappedProb <- list(bString=bString,model=model)
+  MappedProb <- list(bString=bString,model=model,CNOlist=CNOlist)
 
   return(MappedProb)
 

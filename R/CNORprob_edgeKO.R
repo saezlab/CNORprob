@@ -54,31 +54,43 @@ CNORprob_edgeKO = function(model,CNOlist,estim,res) {
     model_KD$reacID <- model$reacID[-counter]
     Target_KOed <- strsplit(x = model$reacID[counter],split = "=")[[1]][2]
 
-    if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model
-      estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE)
-    } else if (model$reacID[1] == "PDGFL=PDGFR") { # if PDGF modeel
-      # estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"))
-      estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE)
-    } else {
-      estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE)
-    }
+    # if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model
+    #   estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE)
+    # } else if (model$reacID[1] == "PDGFL=PDGFR") { # if PDGF modeel
+    #   # estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"))
+    #   estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE)
+    # } else {
+    #   estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE)
+    # }
+
+    # estim <- CNORprob_buildModel(CNOlist = CNOlist,model = model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
+    estim <- CNORprob_buildModel(CNOlist = CNOlist,model = model_KD,expandOR=FALSE,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
+
 
     # If the KOed interaction left with target being not activated anymore -> Fix target to zero (instead of random number)
-    if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model with expandOR
-      if (sum(grepl(paste("\\b",Target_KOed,"\\b",sep=""),estim$Interactions[,3],fixed = TRUE))==0) {
+    # if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model with expandOR
+
+    # [15.07.18] REVISE CONDITION for matching state_names without expanded gates
+      # if (sum(grepl(paste("\\b",Target_KOed,"\\b",sep=""),estim$Interactions[,3],fixed = TRUE))==0) {
+      if (sum(grepl(Target_KOed,estim$Interactions[,3],fixed = TRUE))==0 &
+          sum(grepl(paste0("_",Target_KOed),estim$Interactions[,3],fixed = TRUE))==0 &
+          sum(grepl(paste0(Target_KOed,"_"),estim$Interactions[,3],fixed = TRUE))==0) {
         Target_KOed_Idx <- which(Target_KOed==estim$state_names)
         estim$Input_vector <- cbind(estim$Input_vector,rep(0,dim(estim$Input_vector)[1]))
         estim$Input_index  <- cbind(estim$Input_index,rep(Target_KOed_Idx,dim(estim$Input_index)[1]))
       }
-    } else {
-      if (sum(grepl(Target_KOed,estim$Interactions[,3],fixed = TRUE))==0) {
-        Target_KOed_Idx <- which(Target_KOed==estim$state_names)
-        estim$Input_vector <- cbind(estim$Input_vector,rep(0,dim(estim$Input_vector)[1]))
-        estim$Input_index  <- cbind(estim$Input_index,rep(Target_KOed_Idx,dim(estim$Input_index)[1]))
-      }
-    }
+    # } else {
+    #   if (sum(grepl(Target_KOed,estim$Interactions[,3],fixed = TRUE))==0) {
+    #     Target_KOed_Idx <- which(Target_KOed==estim$state_names)
+    #     estim$Input_vector <- cbind(estim$Input_vector,rep(0,dim(estim$Input_vector)[1]))
+    #     estim$Input_index  <- cbind(estim$Input_index,rep(Target_KOed_Idx,dim(estim$Input_index)[1]))
+    #   }
+    # }
     estim$maxtime <- estim_orig$maxtime
     estim$printCost <- estim_orig$printCost
+    # estim$printCost <- T
+
+    # estim$rsolnp_options$tol <- 1e-6
 
     res <- NULL
 

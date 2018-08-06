@@ -6,8 +6,10 @@
 
 CNORprob_nodeKO = function(model,CNOlist,estim,res) {
 
-  estim_orig <<- estim
+  # estim_orig <<- estim
+  estim_orig <- estim
   model_orig <- model # Keep original CNOR model
+  CNOlist_orig <- CNOlist
 
   optRound_KO <- estim$optRound_analysis
   bestx <- res$BestFitParams
@@ -47,6 +49,7 @@ CNORprob_nodeKO = function(model,CNOlist,estim,res) {
     print(model_orig$namesSpecies[counter])
 
     model_KD <- model_orig
+    CNOlist_KD <- CNOlist_orig
 
     # setTkProgressBar(pb, counter, label=paste( round(counter/length(p_KD)*100, 0), "% done"))
     # setTkProgressBar(pb, counter, label=paste("Knocking down parameter:", toString(counter), "/", toString(length(p_KD))))
@@ -56,19 +59,70 @@ CNORprob_nodeKO = function(model,CNOlist,estim,res) {
     # model_KD$reacID <- model$reacID[-counter]
     model_KD$reacID <- model$reacID[-reacID_toKO]
 
+    # UPDATE 15.07.18 - Remove the node also in CNOlist
+    if (sum(model_orig$namesSpecies[counter]==colnames(CNOlist@cues))>0) { # If KO'ed node present in cue
+      if (sum(model_orig$namesSpecies[counter]==colnames(CNOlist@stimuli))>0) {
+        if (ncol(CNOlist_KD@stimuli)!=2) {
+          CNOlist_KD@stimuli <- CNOlist_KD@stimuli[,-which(model_orig$namesSpecies[counter]==colnames(CNOlist@stimuli))]
+        } else {
+          if (which(model_orig$namesSpecies[counter]==colnames(CNOlist@stimuli))==1) {
+            CNOlist_KD@stimuli <- CNOlist_KD@stimuli[,2];colnames(CNOlist_KD@stimuli) <- colnames(CNOlist@stimuli)[2]
+          } else {
+            CNOlist_KD@stimuli <- CNOlist_KD@stimuli[,1];colnames(CNOlist_KD@stimuli) <- colnames(CNOlist@stimuli)[1]
+          }
+        }
+
+        if (ncol(CNOlist_KD@cues)!=2) {
+          CNOlist_KD@cues <- CNOlist_KD@cues[,-which(model_orig$namesSpecies[counter]==colnames(CNOlist@cues))]
+        } else {
+          if (which(model_orig$namesSpecies[counter]==colnames(CNOlist@cues))==1) {
+            CNOlist_KD@cues <- CNOlist_KD@cues[,2];colnames(CNOlist_KD@cues) <- colnames(CNOlist@cues)[2]
+          } else {
+            CNOlist_KD@cues <- CNOlist_KD@cues[,1];colnames(CNOlist_KD@cues) <- colnames(CNOlist@cues)[1]
+          }
+        }
+      }
+
+      if (sum(model_orig$namesSpecies[counter]==colnames(CNOlist@inhibitors))>0) {
+        if (ncol(CNOlist_KD@inhibitors)!=2) {
+          CNOlist_KD@inhibitors <- CNOlist_KD@inhibitors[,-which(model_orig$namesSpecies[counter]==colnames(CNOlist@inhibitors))]
+        } else {
+          if (which(model_orig$namesSpecies[counter]==colnames(CNOlist@inhibitors))==1) {
+            CNOlist_KD@inhibitors <- matrix(CNOlist_KD@inhibitors[,2]);colnames(CNOlist_KD@inhibitors) <- colnames(CNOlist@inhibitors)[2]
+          } else {
+            CNOlist_KD@inhibitors <- matrix(CNOlist_KD@inhibitors[,1]);colnames(CNOlist_KD@inhibitors) <- colnames(CNOlist@inhibitors)[1]
+          }
+        }
+
+        if (ncol(CNOlist_KD@cues)!=2) {
+          CNOlist_KD@cues <- CNOlist_KD@cues[,-which(model_orig$namesSpecies[counter]==colnames(CNOlist@cues))]
+        } else {
+          if (which(model_orig$namesSpecies[counter]==colnames(CNOlist@cues))==1) {
+            CNOlist_KD@cues <- CNOlist_KD@cues[,2];colnames(CNOlist_KD@cues) <- colnames(CNOlist@cues)[2]
+          } else {
+            CNOlist_KD@cues <- CNOlist_KD@cues[,1];colnames(CNOlist_KD@cues) <- colnames(CNOlist@cues)[1]
+          }
+        }
+      }
+    }
+
     if (length(model_KD$reacID) > 0) {
 
       # Target_KOed <- strsplit(x = model$reacID[counter],split = "=")[[1]][2]
       Target_KOed <- model$namesSpecies[counter]
 
-      if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model
-        estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE)
-      } else if (model$reacID[1] == "PDGFL=PDGFR") { # if PDGF modeel
-        # estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"))
-        estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE)
-      } else {
-        estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE)
-      }
+      # if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model
+      #   estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE)
+      # } else if (model$reacID[1] == "PDGFL=PDGFR") { # if PDGF modeel
+      #   # estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"))
+      #   estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE)
+      # } else {
+      #   estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE)
+      # }
+
+      # estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE)
+      # estim <- CNORprob_buildModel(CNOlist = CNOlist_KD,model = model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
+      estim <- CNORprob_buildModel(CNOlist = CNOlist_KD,model = model_KD,expandOR=FALSE,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
 
       # If the KOed interaction left with target being not activated anymore -> Fix target to zero (instead of random number)
 
@@ -81,7 +135,13 @@ CNORprob_nodeKO = function(model,CNOlist,estim,res) {
           # }
         }
       } else {
-        if (sum(grepl(paste("\\b",Target_KOed,"\\b",sep=""),estim$Interactions[,3],fixed = TRUE))==0) {
+
+          # [15.07.18] REVISE CONDITION for matching state_names without expanded gates
+          # if (sum(grepl(paste("\\b",Target_KOed,"\\b",sep=""),estim$Interactions[,3],fixed = TRUE))==0) {
+          if (sum(grepl(Target_KOed,estim$Interactions[,3],fixed = TRUE))==0 &
+            sum(grepl(paste0("_",Target_KOed),estim$Interactions[,3],fixed = TRUE))==0 &
+            sum(grepl(paste0(Target_KOed,"_"),estim$Interactions[,3],fixed = TRUE))==0) {
+
           Target_KOed_Idx <- which(Target_KOed==estim$state_names)
           if (sum(grepl(Target_KOed_Idx,estim$Input_index[1,],fixed=TRUE))==0) { # If the KOed node is NOT an input
             estim$Input_vector <- cbind(estim$Input_vector,rep(0,dim(estim$Input_vector)[1]))

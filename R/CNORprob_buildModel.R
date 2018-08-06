@@ -28,19 +28,29 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
     stop(print('At least one stimuli is needed in MIDAS file'))
   }
 
-  if (is.null(Inhibitor_names)) {
-    Input_names <- Stimuli_names
-  } else {
-    Input_names <- c(Stimuli_names,Inhibitor_names_with_i)
+  # if (is.null(Inhibitor_names)) {
+  #   Input_names <- Stimuli_names
+  # } else {
+  #   Input_names <- c(Stimuli_names,Inhibitor_names_with_i)
+  # }
+
+  Input_vector <- getCues(CNOlist)
+  # colnames(Input_vector) <- Input_names
+
+  if (!is.null(Inhibitor_names)) {
+    for (counter in 1:length(Inhibitor_names)) {
+      colnames(Input_vector)[grep(Inhibitor_names[counter],colnames(Input_vector),fixed = T)] <- paste0(colnames(Input_vector)[grep(Inhibitor_names[counter],colnames(Input_vector),fixed = T)],"i")
+    }
   }
+
+  Input_names <- colnames(Input_vector)
 
   Input_index <- NULL
   for (counter in 1:length(Input_names)) {
     Input_index <- c(Input_index,which(Input_names[counter]==state_names))
   }
   Input_index <- rep.row(Input_index,dim(getCues(CNOlist))[1])
-  Input_vector <- getCues(CNOlist)
-  colnames(Input_vector) <- Input_names
+
 
   Output_names <- colnames(getSignals(CNOlist)[[length(getSignals(CNOlist))]])
   Output_index <- NULL
@@ -56,10 +66,6 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
 
   # Preprocess reacID to split AND gate and assign special symbol
 
-  # Function replicated from: https://stackoverflow.com/questions/7963898/extracting-the-last-n-characters-from-a-string-in-r
-  substrRight <- function(x, n){
-    substr(x, nchar(x)-n+1, nchar(x))
-  }
 
   ToAdd_ANDreac <- NULL
   Splitted_ANDchar <- NULL
@@ -75,16 +81,24 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
         ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste("&",Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep="")),
                                paste("&",Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep=""))
         ANDreac_Idx <- c(ANDreac_Idx,counter)
-      } else {
-        if (length(grep("!",Splitted_ANDchar[[counter]][[1]][1],fixed=T))!=0) {
-          ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste(Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep=""),
-                                                     paste(Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep="")))
-        } else {
-          ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste(Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep=""),
-                                                     paste(Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep="")))
-        }
-        ANDreac_Idx <- c(ANDreac_Idx,counter)
       }
+      # =========================================================== #
+
+      # This part of the function has been moved to preprocessing_Prob.R instead
+
+      # else {
+      #   if (length(grep("!",Splitted_ANDchar[[counter]][[1]][1],fixed=T))!=0) {
+      #     ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste(Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep=""),
+      #                                                paste(Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep="")))
+      #   } else {
+      #     ToAdd_ANDreac <- rbind(ToAdd_ANDreac,rbind(paste(Splitted_ANDchar[[counter]][[1]][1],"=", Splitted_ANDcharEQ[[counter]][[1]][2],sep=""),
+      #                                                paste(Splitted_ANDcharEQ[[counter]][[1]][1],"=",Splitted_ANDcharEQ[[counter]][[1]][2],sep="")))
+      #   }
+      #   ANDreac_Idx <- c(ANDreac_Idx,counter)
+      # }
+      #
+      # =========================================================== #
+
     }
   }
 
@@ -94,6 +108,7 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
   } else {
     model$reacID_pl <- model$reacID
   }
+
 
   # Start preparing the internal interaction file for CNORprob
   Splitted_reac <- list()
@@ -299,7 +314,8 @@ CNORprob_buildModel = function(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,
     OutAct <- which(AllOutput[counter]==Interactions[,3] & Interactions[,2]=="->")
     OutInb <- which(AllOutput[counter]==Interactions[,3] & Interactions[,2]=="-|")
     if (length(OutAct)==0 & length(OutInb)>0) { # if there is only inhibitory interaction to a single node -> add positive basal interaction
-      Interactions <- rbind(Interactions,c("basal","->",AllOutput[counter],paste0("kb",kb_idx),"N","D"))
+      # Interactions <- rbind(Interactions,c("basal","->",AllOutput[counter],paste0("kb",kb_idx),"N","D")) # Optimise basal
+      Interactions <- rbind(Interactions,c("basal","->",AllOutput[counter],1,"N","D")) # NOT optimise basal
       if (kb_idx==1) {
         state_names <- c(state_names,"basal")
         Input_names <- c(Input_names,"basal")

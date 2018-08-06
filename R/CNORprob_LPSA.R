@@ -8,15 +8,20 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
 
   optRound_LPSA=estim$optRound_analysis
   LPSA_Increments=LPSA_Increments
-  if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model, then use ExpandOR section
+  # if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model, then use ExpandOR section
+  #   Force <- FALSE
+  #   HardConstraint <- FALSE
+  #   ExpandOR <- TRUE
+  # } else {
+  #   Force <- TRUE
+  #   HardConstraint <- TRUE
+  #   ExpandOR <- FALSE
+  # }
+
     Force <- FALSE
     HardConstraint <- FALSE
     ExpandOR <- TRUE
-  } else {
-    Force <- TRUE
-    HardConstraint <- TRUE
-    ExpandOR <- FALSE
-  }
+
 
   estim_orig <<- estim
   A <- estim$A
@@ -218,7 +223,13 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
 
   pdf("Results/Figures/CNORprob_LPSA.pdf")
   for (counter in 1:TotalParams) {
-    plot(p_SA[,counter],cost_SA[,counter],xlab="Parameter range",ylab="MSE",main=estim$param_vector[counter],type="o",col="blue",pch=16,cex=1.5)
+    PlotIntAct <- which(estim$param_vector[counter]==estim$Interactions[,4])
+    if (length(PlotIntAct)==1) {
+      TitlePlot <- paste0(estim$Interactions[PlotIntAct,1]," ",estim$Interactions[PlotIntAct,2]," ",estim$Interactions[PlotIntAct,3])
+    } else {
+      TitlePlot <- paste0(estim$Interactions[PlotIntAct[1],1],"+",paste0(estim$Interactions[PlotIntAct[2],1]," ",estim$Interactions[PlotIntAct[1],2]," ",estim$Interactions[PlotIntAct[1],3]))
+    }
+    plot(p_SA[,counter],cost_SA[,counter],xlab="Parameter range",ylab="MSE",main=TitlePlot,type="o",col="blue",pch=16,cex=1.5)
     # if (!is.null(estim$SD_vector)) { # if variance of the data was provided
     #   lines(p_SA[,counter],rep(CutOff,dim(p_SA)[1]),col="red")
     # }

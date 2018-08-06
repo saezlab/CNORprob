@@ -4,7 +4,7 @@
 #'
 #' @export
 
-CNORprob_optimise = function(estim,optRound=3,SaveOptResults=TRUE) {
+CNORprob_optimise = function(estim,optRound=3,SaveOptResults=TRUE,DispOptResults=TRUE) {
 
   options(warn=-1) # temporary turn off unnecessary warnings
 
@@ -194,7 +194,9 @@ CNORprob_optimise = function(estim,optRound=3,SaveOptResults=TRUE) {
 
 
     if (exists("res")) {
-      print( res$pars )
+      if (DispOptResults==TRUE) {
+        print( res$pars )
+      }
       resAll[[counter]]     <- res
       ElapsedAll[[counter]] <- proc.time() - ptm
     } else {
@@ -242,8 +244,10 @@ CNORprob_optimise = function(estim,optRound=3,SaveOptResults=TRUE) {
     OptResults[2,2] <- mean(ElapsedTime)
     OptResults[2,3] <- sd(ElapsedTime)
 
-    print("Summarised fitting cost and time:")
-    print(OptResults)
+    if (DispOptResults==TRUE) {
+      print("Summarised fitting cost and time:")
+      print(OptResults)
+    }
 
     # Report fitted parameters
     ParamResults <- as.data.frame(matrix(data = NA,nrow = length(estim$param_vector),ncol = 4))
@@ -253,8 +257,10 @@ CNORprob_optimise = function(estim,optRound=3,SaveOptResults=TRUE) {
     ParamResults[,3] <- round(colMeans(OptParamsAll),digits=4)
     ParamResults[,4] <- round(apply(OptParamsAll,2,sd),digits=4)
 
-    print("Summarised identified parameters:")
-    print(ParamResults)
+    if (DispOptResults==TRUE) {
+      print("Summarised identified parameters:")
+      print(ParamResults)
+    }
 
     # Save results
     if (SaveOptResults) {
