@@ -80,6 +80,7 @@ CNORprob_mapModel = function(model,CNOlist,estim,res) {
 
   for (counter in 1:length(model$reacID)) {
 
+
     # Clarify AND gate first
     if (grepl("+",Source_reac[counter],fixed = TRUE)) {
       # Debugged 08.07.18
@@ -92,7 +93,7 @@ CNORprob_mapModel = function(model,CNOlist,estim,res) {
         grepl("+",Source_reac[counter],fixed = TRUE)
 
         for (counter_AND in 1:length(Source_AND_Names[[1]])) {
-          Source_Idx <- c(Source_Idx,which((Source_AND_Names[[1]][counter_AND]==estim$Interactions[,1]) & Target_reac[counter]==estim$Interactions[,3]))
+          Source_Idx <- c(Source_Idx,which(Source_AND_Names[[1]][counter_AND]==estim$Interactions[,1] & Target_reac[counter]==estim$Interactions[,3] & estim$Interactions[,5]=="A"))
         }
         IntAct_Idx <- Source_Idx[1] # Take either the 1st or 2nd index (should be the same)
 
@@ -127,13 +128,22 @@ CNORprob_mapModel = function(model,CNOlist,estim,res) {
 
       # If the different types of interaction are assigned to the same reaction
       if (length(IntAct_Idx)>1) {
-        Sign_ReacID <- grepl("!",strsplit(model$reacID[counter],split = "="),fixed=TRUE) # get the sign
-        if (Sign_ReacID==FALSE) { # if activation
-          Positive_Idx <- which("->"==estim$Interactions[,2])
-          IntAct_Idx <- intersect(IntAct_Idx,Positive_Idx)
-        } else if (Sign_ReacID==TRUE) { # if inhibition
-          Negative_Idx <- which("-|"==estim$Interactions[,2])
-          IntAct_Idx <- intersect(IntAct_Idx,Negative_Idx)
+        if(length(unique(estim$Interactions$V2[IntAct_Idx]))>1) {
+
+          Sign_ReacID <- grepl("!",strsplit(model$reacID[counter],split = "="),fixed=TRUE) # get the sign
+          if (Sign_ReacID==FALSE) { # if activation
+            Positive_Idx <- which("->"==estim$Interactions[,2])
+            IntAct_Idx <- intersect(IntAct_Idx,Positive_Idx)
+          } else if (Sign_ReacID==TRUE) { # if inhibition
+            Negative_Idx <- which("-|"==estim$Interactions[,2])
+            IntAct_Idx <- intersect(IntAct_Idx,Negative_Idx)
+          }
+
+        } else {
+
+          IdxToKeep <- which(estim$Interactions$V5[IntAct_Idx]=="N")
+          IntAct_Idx <- IntAct_Idx[IdxToKeep]
+
         }
       }
 
@@ -171,6 +181,9 @@ CNORprob_mapModel = function(model,CNOlist,estim,res) {
     } else {
       Current_Param_Val = NA
     }
+
+
+    # print(paste0(counter," -- ",Current_Param_Val)) # Might be useful for debugging
 
     bString <- c(bString, Current_Param_Val)
 
