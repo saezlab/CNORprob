@@ -35,7 +35,7 @@ CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round,AddSD=0.05,SeedN
       estim$SD_vector <- matrix(rep(AddSD,length(estim$SD_vector)),nrow(estim$SD_vector),ncol(estim$SD_vector))
     }
 
-    NewSampledData <- array(NA,c(dim(estim$Output_vector)[1],dim(estim$Output_vector)[2],BS_Round))
+    NewSampledData <- array(NA,c(dim(estim$Output_vector)[1],dim(estim$Output_vector)[2],BS_Round),dimnames = list(NULL,colnames(estim$Output_vector,NULL)))
     for (counter in 1:length(estim$Output_vector)) {
       for (counter2 in 1:ncol(estim$Output_vector)) {
         for (counter3 in 1:nrow(estim$Output_vector)) {
@@ -95,7 +95,7 @@ CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round,AddSD=0.05,SeedN
   # Plot figures
   estim <- estim_orig
 
-  pdf(paste0("FitCost_BS_CNORprob_Type",BS_Type,".pdf"))
+  pdf(paste0("Results/Figures/FitCost_BS_CNORprob_Type",BS_Type,".pdf"))
   boxplot(x = cost_BS, outpch = NA,main="Fitting Cost Bootstrapping")
   stripchart(x = cost_BS,
              vertical = TRUE, method = "jitter",
@@ -111,9 +111,10 @@ CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round,AddSD=0.05,SeedN
 
   res$BestFitParams <- colMeans(param_BS)
   # bString <- CNORprob_mapModel(model,estim,res)
-  MappedProb <- CNORprob_mapModel(optmodel,estim,res)
-
-  pdf(paste0("FitParam_BS_CNORprob_Type",BS_Type,".pdf"))
+  # MappedProb <- CNORprob_mapModel(optmodel,estim,res)
+  MappedProb <- CNORprob_mapModel(optmodel,optCNOlist,estim,res)
+  
+  pdf(paste0("Results/Figures/FitParam_BS_CNORprob_Type",BS_Type,".pdf"))
   # plotModel(model=model,CNOlist = CNOlist,bString = bString)
   plotModel(MappedProb$model,optCNOlist,round(MappedProb$bString,digits=2))
   dev.off()

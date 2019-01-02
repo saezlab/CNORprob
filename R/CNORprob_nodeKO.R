@@ -38,6 +38,7 @@ CNORprob_nodeKO = function(model,CNOlist,estim,res) {
   p_r_All <- NULL
   res <- NULL
 
+  ProbExpandOR <- estim$ProbExpandOR
   # pb <- tkProgressBar(title = "Edge Knock-out analysis", min = 0, max = length(p_KD), width=300)
 
   for (counter in  1:length(p_KD)) {
@@ -66,9 +67,9 @@ CNORprob_nodeKO = function(model,CNOlist,estim,res) {
           CNOlist_KD@stimuli <- CNOlist_KD@stimuli[,-which(model_orig$namesSpecies[counter]==colnames(CNOlist@stimuli))]
         } else {
           if (which(model_orig$namesSpecies[counter]==colnames(CNOlist@stimuli))==1) {
-            CNOlist_KD@stimuli <- CNOlist_KD@stimuli[,2];colnames(CNOlist_KD@stimuli) <- colnames(CNOlist@stimuli)[2]
+            CNOlist_KD@stimuli <- matrix(CNOlist_KD@stimuli[,2],length(CNOlist_KD@stimuli[,2]),1);colnames(CNOlist_KD@stimuli) <- colnames(CNOlist@stimuli)[2]
           } else {
-            CNOlist_KD@stimuli <- CNOlist_KD@stimuli[,1];colnames(CNOlist_KD@stimuli) <- colnames(CNOlist@stimuli)[1]
+            CNOlist_KD@stimuli <- matrix(CNOlist_KD@stimuli[,1],length(CNOlist_KD@stimuli[,1]),1);colnames(CNOlist_KD@stimuli) <- colnames(CNOlist@stimuli)[1]
           }
         }
 
@@ -122,7 +123,7 @@ CNORprob_nodeKO = function(model,CNOlist,estim,res) {
 
       # estim <- CNORprob_buildModel(CNOlist,model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE)
       # estim <- CNORprob_buildModel(CNOlist = CNOlist_KD,model = model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
-      estim <- CNORprob_buildModel(CNOlist = CNOlist_KD,model = model_KD,expandOR=FALSE,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
+      estim <- CNORprob_buildModel(CNOlist = CNOlist_KD,model = model_KD,expandOR=ProbExpandOR,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
 
       # If the KOed interaction left with target being not activated anymore -> Fix target to zero (instead of random number)
 

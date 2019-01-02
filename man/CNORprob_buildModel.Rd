@@ -4,10 +4,11 @@
 \alias{CNORprob_buildModel}
 \title{CNORprob_buildModel}
 \usage{
-CNORprob_buildModel(CNOlist, model, expandOR = FALSE, HardConstraint = TRUE,
-  Force = TRUE, ORlist = NULL, L1Reg = 0.01, HLbound = 0.5,
-  SSthresh = 2e-16, PlotIterations = 1, rsolnp_options = list(rho = 1,
-  outer.iter = 400, inner.iter = 800, delta = 1e-07, tol = 1e-08, trace = 1))
+CNORprob_buildModel(CNOlist, model, expandOR = FALSE,
+  HardConstraint = TRUE, Force = TRUE, ORlist = NULL, L1Reg = 0.01,
+  HLbound = 0.5, SSthresh = 2e-16, PlotIterations = 1,
+  rsolnp_options = list(rho = 1, outer.iter = 400, inner.iter = 800,
+  delta = 1e-07, tol = 1e-08, trace = 1))
 }
 \description{
 Build a probablistic logic model description from pknmodel and CNOlist

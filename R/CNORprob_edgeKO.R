@@ -35,7 +35,9 @@ CNORprob_edgeKO = function(model,CNOlist,estim,res) {
   N_r_All <- NULL
   p_r_All <- NULL
   res <- NULL
-
+  
+  ProbExpandOR <- estim$ProbExpandOR
+  
   # pb <- tkProgressBar(title = "Edge Knock-out analysis", min = 0, max = length(p_KD), width=300)
 
   for (counter in  1:length(p_KD)) {
@@ -64,17 +66,18 @@ CNORprob_edgeKO = function(model,CNOlist,estim,res) {
     # }
 
     # estim <- CNORprob_buildModel(CNOlist = CNOlist,model = model_KD,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
-    estim <- CNORprob_buildModel(CNOlist = CNOlist,model = model_KD,expandOR=FALSE,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
+    estim <- CNORprob_buildModel(CNOlist = CNOlist,model = model_KD,expandOR=ProbExpandOR,HardConstraint=FALSE,Force=FALSE,rsolnp_options = estim_orig$rsolnp_options,L1Reg = L1Reg,SSthresh = SSthresh)
 
 
     # If the KOed interaction left with target being not activated anymore -> Fix target to zero (instead of random number)
     # if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model with expandOR
 
     # [15.07.18] REVISE CONDITION for matching state_names without expanded gates
-      # if (sum(grepl(paste("\\b",Target_KOed,"\\b",sep=""),estim$Interactions[,3],fixed = TRUE))==0) {
-      if (sum(grepl(Target_KOed,estim$Interactions[,3],fixed = TRUE))==0 &
-          sum(grepl(paste0("_",Target_KOed),estim$Interactions[,3],fixed = TRUE))==0 &
-          sum(grepl(paste0(Target_KOed,"_"),estim$Interactions[,3],fixed = TRUE))==0) {
+      # if (sum(grepl(paste0("\\b",Target_KOed,"\\b"),estim$Interactions[,3],fixed = TRUE))==0) {
+      # if (sum(grepl(Target_KOed,estim$Interactions[,3],fixed = TRUE))==0 &
+      #     sum(grepl(paste0("_",Target_KOed),estim$Interactions[,3],fixed = TRUE))==0 &
+      #     sum(grepl(paste0(Target_KOed,"_"),estim$Interactions[,3],fixed = TRUE))==0) {
+      if (sum(grepl(paste0("^",Target_KOed,"$"),estim$Interactions[,3],fixed = TRUE))==0) {
         Target_KOed_Idx <- which(Target_KOed==estim$state_names)
         estim$Input_vector <- cbind(estim$Input_vector,rep(0,dim(estim$Input_vector)[1]))
         estim$Input_index  <- cbind(estim$Input_index,rep(Target_KOed_Idx,dim(estim$Input_index)[1]))

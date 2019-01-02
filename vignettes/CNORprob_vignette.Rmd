@@ -15,25 +15,6 @@ vignette: >
 
 rm(list=ls()); cat("\014") # clean screen and variables 
 
-# # Install required packages (if were not previously installed)
-# source("https://bioconductor.org/biocLite.R")
-# biocLite("CellNOptR") # for loading network/data and pre-processing
-# # --- OR --- #
-# install.packages("devtools")
-# library(devtools)
-# install_github('saezlab/CellNOptR/packages/CellNOptR', force=TRUE)
-# 
-# install.packages("Rsolnp") # optimisation algorithm
-# install.packages("R.utils") # Timeout control
-
-# # Install CNORprodb from Github (or load library for development version)
-# library(devtools)
-# install_github('saezlab/CellNOptR/packages/CNORprob', force=TRUE)
-# # --- OR --- #
-library(devtools)
-# devtools::install()
-load_all()
-
 # Load prior library and R-scripts
 library(CNORprob)
 library(CellNOptR) # for loading network/data and pre-processing
@@ -43,18 +24,15 @@ library(R.utils) # Timeout control
 # Select model
 # 1 = CNOToy, 2 = FALCON Ex, 3 = PDGF, 4 = L-plastin
 # 5 = SR-crosstalk, 6 = CCl4 IFADO, 7 = APAP-JNK, 8 = pp-Raf XOR
-# Selected_Model <- 1
-Selected_Model <- 5
+Selected_Model <- 1
 
 # Assign optimisation and parameter settings
-optRound_optim    <- 5        # rounds of optimisation
-# L1Reg             <- 0.01     # assign weight for L1-regularisation
-L1Reg             <- 0     # assign weight for L1-regularisation
-# MaxTime           <- 180      # time for each round of optimisation [seconds]
-MaxTime           <- 600      # time for each round of optimisation [seconds]
+optRound_optim    <- 3        # rounds of optimisation
+L1Reg             <- 1e-4     # assign weight for L1-regularisation
+MaxTime           <- 180      # time for each round of optimisation [seconds]
 HLbound           <- 0.5      # cut-off for high and low weights
 SSthresh          <- 2e-16    # cut-off for states' difference at steady-state
-printCost         <- 1        # print or not print intermediate fitting cost [0,1]
+printCost         <- 0        # print or not print intermediate fitting cost [0,1]
 PlotIterations    <- 1        # rounds of optimisation to generate plots
 SaveOptResults    <- TRUE     # [TRUE,FALSE] generate reports from optimisation
 
@@ -64,15 +42,14 @@ outer.iter        <- 100       # maximum major iterations / default = 400
 inner.iter        <- 100       # maximum minor iterations / default = 800
 delta             <- 1e-7     # relative step size eval. / default = 1e-7
 tol               <- 1e-8     # relative tol. for optim. / default = 1e-8
-# tol               <- 1e-5     # relative tol. for optim. / default = 1e-8
 trace             <- 1        # print objfunc every iter / default = 1
 
 # Post-optimisation analysis
-Analyses          <- c(F,F,F,F) # [F,T] edge knockout, node knockout, sensitivity analysis
+Analyses          <- c(T,T,T,T) # [F,T] edge knockout, node knockout, sensitivity analysis
 optRound_analysis <- 1        # rounds of optmisation in each analysis
 LPSA_Increments   <- 2        # number of increments in LPSA analysis
 BS_Type           <- 1        # Type of Bootstrapping [1=resample with replacement from residual; 2=resampling from mean & variant]
-BS_Round          <- 10       # number of rounds for bootstrapping
+BS_Round          <- 5       # number of rounds for bootstrapping
 
 # ================================================ # 
 # ======= Run the driver with option+cmd+R ======= #
@@ -132,24 +109,24 @@ pknmodel <- readSIF(model) # build a prior-knowledge network from SIF file
 CNOlist <- CNOlist(data) # build a CNOlist from data file in MIDAS format
 
 # pre-processing based on the selected model
-if (Selected_Model==1) {
-  model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=TRUE, cutNONC=TRUE, verbose=FALSE)
-  estim <- CNORprob_buildModel(CNOlist,model,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-} else {
+if (Selected_Model==1) {ProbCompression <- T;ProbCutNONC <- T; ProbExpandOR <- T
+} else {ProbCompression <- F;ProbCutNONC <- F; ProbExpandOR <- F}
+  # model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=TRUE, cutNONC=TRUE, verbose=FALSE)
+  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
   
+  ModDatppProb <- preprocessing_Prob(CNOlist, pknmodel, expansion=FALSE,compression=ProbCompression, cutNONC=ProbCutNONC, verbose=FALSE) # Now use CNORprob specific pre-processing (expansion=FALSE by default and report)
   
-  ModDatppProb <- preprocessing_Prob(CNOlist, pknmodel, expansion=FALSE,compression=FALSE, cutNONC=FALSE, verbose=FALSE) # Now use CNORprob specific pre-processing (expansion=FALSE by default and report)
-
 optmodel <- ModDatppProb$cutModel
 optCNOlist <- ModDatppProb$data
   
+  estim <- CNORprob_buildModel(optCNOlist,optmodel,expandOR=ProbExpandOR,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+
   # model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=FALSE, cutNONC=FALSE, verbose=FALSE)
   # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-  estim <- CNORprob_buildModel(optCNOlist,optmodel,expandOR=FALSE,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+  # estim <- CNORprob_buildModel(optCNOlist,optmodel,expandOR=FALSE,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
   # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
   # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
   # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("XOR1_OR_XOR2=MAPK"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-}
 
 # Optimisation
 estim$maxtime <- MaxTime; estim$printCost <- printCost
@@ -157,38 +134,23 @@ estim$optimOptions <- c(rho,outer.iter,inner.iter,delta,tol,trace)
 res <- CNORprob_optimise(estim,optRound_optim,SaveOptResults)
 
 # Plot results
-# CNORprob_plotFit(model,CNOlist,estim,res,show=TRUE, plotPDF=TRUE, tag=NULL, plotParams=list(cex=0.8, cmap_scale=1, ymin=0))
-# bString <- CNORprob_mapModel(model,estim,res)
-# pdf('Fitted_Model.pdf') 
-# plotModel(bString$model,CNOlist,round(bString$bString,digits=2))
-# dev.off()
 CNORprob_plotFit(optmodel,optCNOlist,estim,res,show=TRUE, plotPDF=TRUE, tag=NULL, plotParams=list(cex=0.8, cmap_scale=1, ymin=0))
 MappedProb <- CNORprob_mapModel(optmodel,optCNOlist,estim,res)
-pdf('Fitted_Model.pdf') 
 plotModel(MappedProb$model,MappedProb$CNOlist,round(MappedProb$bString,digits=2))
-dev.off()
-
 
 # Post-optimisation analyses
+estim$ProbCompression <- T
+estim$ProbCutNONC <- T 
+estim$ProbExpandOR <- T
 estim$optRound_analysis <- optRound_analysis
-estim$BS_Type <- BS_Type
-estim$BS_Round <- BS_Round
 estim_original <- estim
 estim_based <- estim_original; if (Analyses[1]) { estim_Result  <- CNORprob_edgeKO(optmodel,optCNOlist,estim_based,res) }
 estim_based <- estim_original; if (Analyses[2]) { estim_Result  <- CNORprob_nodeKO(optmodel,optCNOlist,estim_based,res) }
-estim_based <- estim_original; if (Analyses[3]) { estim_Result  <- CNORprob_LPSA(optmodel,optCNOlist,estim_based,res,HLbound,LPSA_Increments) }
+estim_based <- estim_original; if (Analyses[3]) { estim_Result  <- CNORprob_LPSA(estim_based,res,HLbound,LPSA_Increments,Force=F) }
 estim_based <- estim_original; if (Analyses[4]) { estim_Result  <- CNORprob_BS(optmodel,optCNOlist,estim_based,res,BS_Type,BS_Round) }
 
-BS_Type           <- 2        # Type of Bootstrapping [1=resample with replacement from residual; 2=resampling from mean & variant]
-BS_Round          <- 10       # number of rounds for bootstrapping
-estim$BS_Type <- BS_Type
-estim$BS_Round <- BS_Round
-estim_original <- estim
-estim_based <- estim_original; if (Analyses[4]) { estim_Result  <- CNORprob_BS(model,CNOlist,estim_based,res,BS_Type,BS_Round) }
-
+save(estim_Result,file="Results/CNORprob_PostHocResults.Rdata")
 
 # ===== End of the script ===== #
 
 ```
-
-

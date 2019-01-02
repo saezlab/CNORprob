@@ -4,8 +4,8 @@
 \alias{CNORprob_writeConstraint}
 \title{CNORprob_writeConstraint}
 \usage{
-CNORprob_writeConstraint(Interactions, HLbound, state_names, HardConstraint,
-  LPSA = NULL)
+CNORprob_writeConstraint(Interactions, HLbound, state_names,
+  HardConstraint, LPSA = NULL)
 }
 \description{
 Write constraints for probabilistic logic models before passing to the optimiser

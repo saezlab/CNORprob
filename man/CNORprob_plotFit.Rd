@@ -4,8 +4,9 @@
 \alias{CNORprob_plotFit}
 \title{CNORprob_plotFit}
 \usage{
-CNORprob_plotFit(model, CNOlist, estim, res, show = TRUE, plotPDF = TRUE,
-  tag = NULL, plotParams = list(cex = 0.8, cmap_scale = 1))
+CNORprob_plotFit(model, CNOlist, estim, res, show = TRUE,
+  plotPDF = TRUE, tag = NULL, plotParams = list(cex = 0.8, cmap_scale
+  = 1, yMin = 0))
 }
 \description{
 Plot optimisation results against the experimental data

@@ -4,8 +4,8 @@
 \alias{CNORprob_LPSA}
 \title{CNORprob_LPSA}
 \usage{
-CNORprob_LPSA(model, CNOlist, estim, res, HLbound = 0.5,
-  LPSA_Increments = 2, Force = FALSE)
+CNORprob_LPSA(estim, res, HLbound = 0.5, LPSA_Increments = 2,
+  Force = FALSE)
 }
 \description{
 Systematically run local parameter sensitivity analysis 'LPSA' for each optimised parameter to assess their identifiabilities in the range of 0 to 1

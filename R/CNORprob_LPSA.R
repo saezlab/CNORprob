@@ -4,8 +4,9 @@
 #'
 #' @export
 
-CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,Force=FALSE) {
-
+# CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,Force=FALSE) {
+CNORprob_LPSA = function(estim,res,HLbound=0.5,LPSA_Increments=2,Force=FALSE) {
+    
   optRound_LPSA=estim$optRound_analysis
   LPSA_Increments=LPSA_Increments
   # if (model$reacID[1] == "EGF=PI3K") { # if CNOToy model, then use ExpandOR section
@@ -20,10 +21,10 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
 
     Force <- FALSE
     HardConstraint <- FALSE
-    ExpandOR <- TRUE
+    ExpandOR <- estim$ProbExpandOR
 
 
-  estim_orig <<- estim
+  estim_orig <- estim
   A <- estim$A
   Aeq <- estim$Aeq
 
@@ -64,7 +65,7 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
   }
 
   # Resimulation with perturbed parameter values
-  estim                <<- estim_orig
+  estim                 <- estim_orig
   Param_original        <- estim$param_vector
   State_names_original  <- estim$state_names
   Interactions_original <- estim$Interactions
@@ -74,8 +75,6 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
   num_plots             <- length(Param_original)
   NLines                <- ceiling(sqrt(num_plots))
   NCols                 <- ceiling(num_plots/NLines)
-
-  Ident_All             <- c()
 
   # pb <- tkProgressBar(title = "LPSA analysis", min = 0, max = length(Param_original), width=300)
 
@@ -127,7 +126,7 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
       SSthresh <- estim_orig$SSthresh
       PlotIterations <- estim_orig$PlotIterations
 
-      Interactions <- Interactions[-replace_idx,]
+      # Interactions <- Interactions[-replace_idx,]
 
       if (!is.null(dim(Interactions))) {
         Interactions_List <- list()
@@ -136,7 +135,8 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
         }
       }
 
-      estim                <<- list()
+      rm(estim)
+      estim                 <- list()
       estim$Interactions_List <- Interactions_List
       estim$Interactions    <- Interactions
       estim$SSthresh        <- SSthresh
@@ -223,11 +223,11 @@ CNORprob_LPSA = function(model,CNOlist,estim,res,HLbound=0.5,LPSA_Increments=2,F
 
   pdf("Results/Figures/CNORprob_LPSA.pdf")
   for (counter in 1:TotalParams) {
-    PlotIntAct <- which(estim$param_vector[counter]==estim$Interactions[,4])
+    PlotIntAct <- which(estim_orig$param_vector[counter]==estim_orig$Interactions[,4])
     if (length(PlotIntAct)==1) {
-      TitlePlot <- paste0(estim$Interactions[PlotIntAct,1]," ",estim$Interactions[PlotIntAct,2]," ",estim$Interactions[PlotIntAct,3])
+      TitlePlot <- paste0(estim_orig$Interactions[PlotIntAct,1]," ",estim_orig$Interactions[PlotIntAct,2]," ",estim_orig$Interactions[PlotIntAct,3])
     } else {
-      TitlePlot <- paste0(estim$Interactions[PlotIntAct[1],1],"+",paste0(estim$Interactions[PlotIntAct[2],1]," ",estim$Interactions[PlotIntAct[1],2]," ",estim$Interactions[PlotIntAct[1],3]))
+      TitlePlot <- paste0(estim_orig$Interactions[PlotIntAct[1],1],"+",paste0(estim_orig$Interactions[PlotIntAct[2],1]," ",estim_orig$Interactions[PlotIntAct[1],2]," ",estim_orig$Interactions[PlotIntAct[1],3]))
     }
     plot(p_SA[,counter],cost_SA[,counter],xlab="Parameter range",ylab="MSE",main=TitlePlot,type="o",col="blue",pch=16,cex=1.5)
     # if (!is.null(estim$SD_vector)) { # if variance of the data was provided

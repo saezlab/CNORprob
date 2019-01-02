@@ -4,7 +4,8 @@
 \alias{CNORprob_optimise}
 \title{CNORprob_optimise}
 \usage{
-CNORprob_optimise(estim, optRound = 3, SaveOptResults = TRUE)
+CNORprob_optimise(estim, optRound = 3, SaveOptResults = TRUE,
+  DispOptResults = TRUE)
 }
 \description{
 An optimisation interface between model descriptions 'estim' and the optimiser 'rsolnp'

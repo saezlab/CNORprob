@@ -4,7 +4,7 @@
 \alias{CNORprob_mapModel}
 \title{CNORprob_mapModel}
 \usage{
-CNORprob_mapModel(model, estim, res)
+CNORprob_mapModel(model, CNOlist, estim, res)
 }
 \description{
 Map optimised parameters from CNORprob back to each reaction in model$reacID to be compatible with model plotting function in the CellNOptR package
