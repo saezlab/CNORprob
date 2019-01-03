@@ -23,8 +23,7 @@ library(R.utils) # Timeout control
 
 # Select model
 # 1 = CNOToy, 2 = FALCON Ex, 3 = PDGF, 4 = L-plastin
-# 5 = SR-crosstalk, 6 = CCl4 IFADO, 7 = APAP-JNK, 8 = pp-Raf XOR
-Selected_Model <- 1
+Selected_Model <- 2
 
 # Assign optimisation and parameter settings
 optRound_optim    <- 3        # rounds of optimisation
@@ -71,36 +70,6 @@ if (Selected_Model==1) {
 } else if (Selected_Model==4) {
   model <- system.file("FALCON_LPL_BT20_Model.sif",package="CNORprob")
   data  <- system.file("FALCON_LPL_BT20_Exp.csv",package="CNORprob")
-} else if (Selected_Model==5) {
-  # model <- system.file("SR_CT_Model.sif",package="CNORprob")
-  model <- system.file("SR_CT_Model_v2.sif",package="CNORprob")
-  # model <- system.file("SR_CT_Model_v2p1.sif",package="CNORprob")
-  # model <- system.file("SR_CT_Model_v2p2.sif",package="CNORprob")
-  # model <- system.file("SR_CT_Model_v2p3.sif",package="CNORprob")
-  data  <- system.file("SR_CT_Exp.csv",package="CNORprob")
-} else if (Selected_Model==6) {
-  model <- system.file("CCl4_Model.sif",package="CNORprob")
-  data  <- system.file("CCl4_Exp_2h.csv",package="CNORprob")
-  # data  <- system.file("CCl4_Exp_48h.csv",package="CNORprob")
-} else if (Selected_Model==7) {
-  # model <- system.file("APAP_JNK_CT_Unfitted_Model.sif",package="CNORprob")
-  model <- system.file("APAP_JNK_CT_Model.sif",package="CNORprob")
-  # model <- system.file("APAP_JNK_CT_Model_KO.sif",package="CNORprob")
-  data  <- system.file("APAP_JNK_CT_Meas.csv",package="CNORprob")
-} else if (Selected_Model==8) {
-  model <- system.file("Raf_pp_model.sif",package="CNORprob")
-  data  <- system.file("Raf_pp_data.csv",package="CNORprob")
-} else if (Selected_Model==9) {
-  model <- system.file("AKT3_noAND_OR_PT.sif",package="CNORprob")
-  data  <- system.file("AKT3data_q10_90_timeZero_plusSS_PT.csv",package="CNORprob")
-} else if (Selected_Model==10) {
-  # model <- system.file("PKN_allMarkers_opt_50p_prunedGates_EGFnodes.sif",package="CNORprob")
-  # model <- system.file("PKN_allMarkers_opt_50p_prunedGates_EGFnodes_allGatesRemoved.sif",package="CNORprob")
-  # model <- system.file("PKN_allMarkers_opt_50p_prunedGates_EGFnodes_allGatesRemoved_revised.sif",package="CNORprob")
-  model <- system.file("PKN_allMarkers_opt_50p_prunedGates_EGFnodes_allGatesRemoved_revised_AddANDback.sif",package="CNORprob")
-  # data  <- system.file("mergedMIDAS_EGFnodes,csv",package="CNORprob")
-  # data  <- system.file("mergedMIDAS_EGFnodes_2exps.csv",package="CNORprob")
-  data  <- system.file("mergedMIDAS_EGFnodes_2exps_revised.csv",package="CNORprob")
 } else {
   print('::: Please select the model number from the list :::')
 }
@@ -109,24 +78,21 @@ pknmodel <- readSIF(model) # build a prior-knowledge network from SIF file
 CNOlist <- CNOlist(data) # build a CNOlist from data file in MIDAS format
 
 # pre-processing based on the selected model
-if (Selected_Model==1) {ProbCompression <- T;ProbCutNONC <- T; ProbExpandOR <- T
-} else {ProbCompression <- F;ProbCutNONC <- F; ProbExpandOR <- F}
-  # model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=TRUE, cutNONC=TRUE, verbose=FALSE)
-  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=TRUE,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-  
-  ModDatppProb <- preprocessing_Prob(CNOlist, pknmodel, expansion=FALSE,compression=ProbCompression, cutNONC=ProbCutNONC, verbose=FALSE) # Now use CNORprob specific pre-processing (expansion=FALSE by default and report)
-  
+if (Selected_Model==1) {ProbCompression <- T;ProbCutNONC <- T; ProbExpandOR <- T; ProbHardConstraint <- F; ProbForce <- F
+} else {ProbCompression <- F;ProbCutNONC <- F; ProbExpandOR <- F; ProbHardConstraint <- F; ProbForce <- F}
+
+if (Selected_Model==3) {ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"); # Manually assign OR gate
+tol <- 1e-4 # reduced tolerance of solution to speed up optimisation time
+} else if (Selected_Model==4) {tol <- 1e-4; ORlist=NULL} else {ORlist=NULL}
+
+# Now use CNORprob specific pre-processing (expansion=FALSE by default and report)
+ModDatppProb <- preprocessing_Prob(CNOlist, pknmodel, expansion=FALSE,
+                                   compression=ProbCompression, cutNONC=ProbCutNONC,
+                                   verbose=FALSE) 
 optmodel <- ModDatppProb$cutModel
 optCNOlist <- ModDatppProb$data
   
-  estim <- CNORprob_buildModel(optCNOlist,optmodel,expandOR=ProbExpandOR,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-
-  # model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=FALSE, cutNONC=FALSE, verbose=FALSE)
-  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-  # estim <- CNORprob_buildModel(optCNOlist,optmodel,expandOR=FALSE,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,HardConstraint=TRUE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-  # estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("XOR1_OR_XOR2=MAPK"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+estim <- CNORprob_buildModel(optCNOlist,optmodel,expandOR=ProbExpandOR,ORlist=ORlist,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
 
 # Optimisation
 estim$maxtime <- MaxTime; estim$printCost <- printCost
@@ -139,9 +105,9 @@ MappedProb <- CNORprob_mapModel(optmodel,optCNOlist,estim,res)
 plotModel(MappedProb$model,MappedProb$CNOlist,round(MappedProb$bString,digits=2))
 
 # Post-optimisation analyses
-estim$ProbCompression <- T
-estim$ProbCutNONC <- T 
-estim$ProbExpandOR <- T
+estim$ProbCompression <- ProbCompression
+estim$ProbCutNONC <- ProbCutNONC
+estim$ProbExpandOR <- ProbExpandOR
 estim$optRound_analysis <- optRound_analysis
 estim_original <- estim
 estim_based <- estim_original; if (Analyses[1]) { estim_Result  <- CNORprob_edgeKO(optmodel,optCNOlist,estim_based,res) }

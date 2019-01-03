@@ -72,9 +72,12 @@ CNORprob_optFunc = function(k) {
     All_params <- c(All_params,Extracted_params)
   }
 
+  # -- Fixed 03.01.19 - Indices of fixed param were already removed -- #
   IdxFixVal  <- which(!is.na(as.numeric(All_params))) # Get indicies of fixed values
   if (length(IdxFixVal)>0) {
+
     process_param_index <- process_param_index[-c(IdxFixVal),] # Remove interactions with fixed values
+
     IdxFixVal_BL <- rep(FALSE,length(FixBool))
     IdxFixVal_BL[IdxFixVal] <- TRUE
     # if (intersect(IdxFixVal_BL,FixBool)) {

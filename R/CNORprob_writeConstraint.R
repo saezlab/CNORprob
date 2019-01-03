@@ -291,10 +291,10 @@ CNORprob_writeConstraint = function(Interactions,HLbound,state_names,HardConstra
   param_index=orig_param_index; # return original param_index
   FixBool <- orig_FixBool; # return original FixBool index
 
-  if (!is.null(LPSA)) {
-    param_index <- param_index[-LPSA,]
-    FixBool <- FixBool[-LPSA]
-  }
+  # if (!is.null(LPSA)) {
+  #   param_index <- param_index[-LPSA,]
+  #   FixBool <- FixBool[-LPSA]
+  # }
 
   return(list(ma=ma,mi=mi,A=A,b=b,Aeq=Aeq,beq=beq,state_names=state_names,param_vector=param_vector,param_index=param_index,LB=LB,UB=UB,FixBool=FixBool))
 
