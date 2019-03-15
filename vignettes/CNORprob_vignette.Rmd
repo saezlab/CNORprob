@@ -21,9 +21,12 @@ library(CellNOptR) # for loading network/data and pre-processing
 library(Rsolnp) # optimisation algorithm
 library(R.utils) # Timeout control
 
-# Select model
-# 1 = CNOToy, 2 = FALCON Ex, 3 = PDGF, 4 = L-plastin
-Selected_Model <- 2
+# Select CNORprob example
+# 1 = CNO-Toy, 2 = FALCON-Ex, 3 = PDGF, 4 = L-plastin
+CNORprob_Example <- 1
+CNORprob_inputs <- loadExample_Prob(CNORprob_Example = CNORprob_Example)
+optmodel <- CNORprob_inputs$optmodel
+optCNOlist <- CNORprob_inputs$optCNOlist
 
 # Assign optimisation and parameter settings
 optRound_optim    <- 3        # rounds of optimisation
@@ -56,45 +59,11 @@ BS_Round          <- 5       # number of rounds for bootstrapping
 
 estim_Result   <<- list() # Initialise global variable of results
 rsolnp_options  <- list(rho=rho,outer.iter=outer.iter,inner.iter=inner.iter,delta=delta,tol=tol,trace=trace) # Collapase optimisation options
-
-# Assign selected model to pknmodel and CNOlist
-if (Selected_Model==1) {
-  model <- system.file("ToyPKNMMB.sif",package="CNORprob")
-  data  <- system.file("ToyDataMMB.csv",package="CNORprob")
-} else if (Selected_Model==2) {
-  model <- system.file("FALCON_Ex1_Model.sif",package="CNORprob")
-  data  <- system.file("FALCON_Ex1_Exp.csv",package="CNORprob")
-} else if (Selected_Model==3) {
-  model <- system.file("FALCON_PDGF_Model.sif",package="CNORprob")
-  data  <- system.file("FALCON_PDGF_Exp.csv",package="CNORprob")
-} else if (Selected_Model==4) {
-  model <- system.file("FALCON_LPL_BT20_Model.sif",package="CNORprob")
-  data  <- system.file("FALCON_LPL_BT20_Exp.csv",package="CNORprob")
-} else {
-  print('::: Please select the model number from the list :::')
-}
-
-pknmodel <- readSIF(model) # build a prior-knowledge network from SIF file
-CNOlist <- CNOlist(data) # build a CNOlist from data file in MIDAS format
-
-# pre-processing based on the selected model
-if (Selected_Model==1) {ProbCompression <- T;ProbCutNONC <- T; ProbExpandOR <- T; ProbHardConstraint <- F; ProbForce <- F
-} else {ProbCompression <- F;ProbCutNONC <- F; ProbExpandOR <- F; ProbHardConstraint <- F; ProbForce <- F}
-
-if (Selected_Model==3) {ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"); # Manually assign OR gate
-tol <- 1e-4 # reduced tolerance of solution to speed up optimisation time
-} else if (Selected_Model==4) {tol <- 1e-4; ORlist=NULL} else {ORlist=NULL}
-
-# Now use CNORprob specific pre-processing (expansion=FALSE by default and report)
-ModDatppProb <- preprocessing_Prob(CNOlist, pknmodel, expansion=FALSE,
-                                   compression=ProbCompression, cutNONC=ProbCutNONC,
-                                   verbose=FALSE) 
-optmodel <- ModDatppProb$cutModel
-optCNOlist <- ModDatppProb$data
   
-estim <- CNORprob_buildModel(optCNOlist,optmodel,expandOR=ProbExpandOR,ORlist=ORlist,HardConstraint=FALSE,Force=FALSE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+# Generate optimisation object
+estim <- CNORprob_buildModel(optCNOlist,optmodel,expandOR=CNORprob_inputs$ProbExpandOR,ORlist=CNORprob_inputs$ORlist,HardConstraint=CNORprob_inputs$ProbHardConstraint,Force=CNORprob_inputs$ProbForce,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
 
-# Optimisation
+# Run Optimisation
 estim$maxtime <- MaxTime; estim$printCost <- printCost
 estim$optimOptions <- c(rho,outer.iter,inner.iter,delta,tol,trace)
 res <- CNORprob_optimise(estim,optRound_optim,SaveOptResults)
@@ -105,9 +74,9 @@ MappedProb <- CNORprob_mapModel(optmodel,optCNOlist,estim,res)
 plotModel(MappedProb$model,MappedProb$CNOlist,round(MappedProb$bString,digits=2))
 
 # Post-optimisation analyses
-estim$ProbCompression <- ProbCompression
-estim$ProbCutNONC <- ProbCutNONC
-estim$ProbExpandOR <- ProbExpandOR
+estim$ProbCompression <- CNORprob_inputs$ProbCompression
+estim$ProbCutNONC <- CNORprob_inputs$ProbCutNONC
+estim$ProbExpandOR <- CNORprob_inputs$ProbExpandOR
 estim$optRound_analysis <- optRound_analysis
 estim_original <- estim
 estim_based <- estim_original; if (Analyses[1]) { estim_Result  <- CNORprob_edgeKO(optmodel,optCNOlist,estim_based,res) }
