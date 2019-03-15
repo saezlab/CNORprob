@@ -2,7 +2,7 @@
 
 This is a probabilistic logic variant of [CellNOpt](https://www.bioconductor.org/packages/release/bioc/html/CNORode.html) which allows for quantitative optimisation of logical network for (quasi-)steady-state data. The core optimisation pipeline is derived from [FALCON](https://github.com/sysbiolux/FALCON): a toolbox for the fast contextualization of logical networks.
 
-CNORprob takes prior knowledge network and experimental data in SIF and MIDAS formats, respectively, and it outputs graphical representation of results in CellNOpt's format. Post-optimisation analyses including systematic edge-knockout, systematic node-knockout, and local parameter sensitivity analyses (LPSA) were also included in the pipeline as offered in the original FALCON toolbox. 
+CNORprob takes prior knowledge network and experimental data in SIF and MIDAS formats, respectively, and it outputs graphical representation of results in CellNOpt's format. Post-optimisation analyses including systematic edge-knockout, systematic node-knockout, bootstrapping and local parameter sensitivity analyses (LPSA) were also included in the pipeline as offered in the original FALCON toolbox. 
 
 ## Getting Started
 
@@ -14,16 +14,18 @@ CNORprob requires prior installation of the "CellNOptR" package (install either 
 
 ```R
 # Install required packages (if were not previously installed)
-source("https://bioconductor.org/biocLite.R")
-biocLite("CellNOptR") # for loading network/data and pre-processing
+# CellNOptR
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("CellNOptR", version = "3.8")
 # --- OR ---
-install.packages("devtools")
+# install.packages('devtools') # in case devtools hasn't been installed
 library(devtools)
-install_github('saezlab/CellNOptR/packages/CellNOptR', force=TRUE)
+install_github('saezlab/CellNOptR', force=TRUE)
 
+# Rsolnp and R.utils
 install.packages("Rsolnp") # optimisation algorithm
 install.packages("R.utils") # Timeout control
-
 ```
 
 ### Installing
@@ -32,11 +34,11 @@ CNORprob is currently available for the installation as an R-package from our Gi
 
 ```R
 # Install CNORprob from Github (or load library for development version)
+# install.packages('devtools') # in case devtools hasn't been installed
 library(devtools)
-install_github('saezlab/CellNOptR/packages/CNORprob', force=TRUE)
-# --- OR --- #
-library(devtools)
-load_all()
+install_github('saezlab/CNORprob') # Doesn't work currently as the repository is still private
+# or download the source file from GitHub and install from source
+install.packages('path_to_extracted_CNORprob_directory', repos = NULL, type="source")
 ```
 
 ## Running the tests
@@ -46,16 +48,20 @@ Several examples are available as the test case for CNORprob. Users can select t
 2) FALCON pipeline example, see [paper](https://academic.oup.com/bioinformatics/article/33/21/3431/3897376)
 3) PDGF (dissecting PDGF signalling in Gastrointestinal Stromal Tumour - GIST), see [paper](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0156223)
 4) L-plastin (investigating L-plastin activating signalling pathways in breast cancer cell lines), see [paper](http://www.fasebj.org/content/30/3/1218.long)
-5) (Under investigation) Stress-Response (SR) crosstalk between oxidative stress and DNA damage response pathways
-6) (Under investigation) CCl4-induced liver injury in mice (in vivo)
-7) (Under investigation) APAP-induced Jnk-Jun crosstalk in hepatocyte (in vitro)
-8) An example of how to model network motif with XOR gate 
 
 ```R
-# Select model
-# 1 = CNOToy, 2 = FALCON Ex, 3 = PDGF, 4 = L-plastin
-# 5 = SR-crosstalk, 6 = CCl4 IFADO, 7 = APAP-JNK, 8 = pp-Raf XOR
-Selected_Model <- 1
+# Load required packages
+library(CNORprob)
+library(CellNOptR) # for loading network/data and pre-processing
+library(Rsolnp) # optimisation algorithm
+library(R.utils) # timeout control
+
+# Select CNORprob example
+# 1 = CNO-Toy, 2 = FALCON-Ex, 3 = PDGF, 4 = L-plastin
+CNORprob_Example <- 1
+CNORprob_inputs <- loadExample_Prob(CNORprob_Example = CNORprob_Example)
+optmodel <- CNORprob_inputs$optmodel
+optCNOlist <- CNORprob_inputs$optCNOlist
 ```
 
 ### Setting and options for optimisation and subsequent analyses 
@@ -64,8 +70,8 @@ A set of optimisation parameters can be assigned at the beginning of the vignett
 
 ```R
 # Assign optimisation and parameter settings
-optRound_optim    <- 1        # rounds of optimisation
-L1Reg             <- 0.01     # assign weight for L1-regularisation
+optRound_optim    <- 3        # rounds of optimisation
+L1Reg             <- 1e-4     # assign weight for L1-regularisation
 MaxTime           <- 180      # time for each round of optimisation [seconds]
 HLbound           <- 0.5      # cut-off for high and low weights
 SSthresh          <- 2e-16    # cut-off for states' difference at steady-state
@@ -75,23 +81,78 @@ SaveOptResults    <- TRUE     # [TRUE,FALSE] generate reports from optimisation
 
 # Optimiser (rsolnp) options/control list (see rsolnp vignette: https://cran.r-project.org/web/packages/Rsolnp/Rsolnp.pdf)
 rho               <- 1        # penalty weighting scaler / default = 1
-outer.iter        <- 30       # maximum major iterations / default = 400
-inner.iter        <- 30       # maximum minor iterations / default = 800
+outer.iter        <- 100       # maximum major iterations / default = 400
+inner.iter        <- 100       # maximum minor iterations / default = 800
 delta             <- 1e-7     # relative step size eval. / default = 1e-7
 tol               <- 1e-8     # relative tol. for optim. / default = 1e-8
 trace             <- 1        # print objfunc every iter / default = 1
 
 # Post-optimisation analysis
-Analyses          <- c(T,T,T) # [F,T] edge knockout, node knockout, sensitivity analysis
+Analyses          <- c(T,T,T,T) # [F,T] edge knockout, node knockout, sensitivity analysis
 optRound_analysis <- 1        # rounds of optmisation in each analysis
 LPSA_Increments   <- 2        # number of increments in LPSA analysis
+BS_Type           <- 1        # Type of Bootstrapping [1=resample with replacement from residual; 2=resampling from mean & variant]
+BS_Round          <- 5       # number of rounds for bootstrapping
 ```
 
-Subsequent to these assignments, users can further run the rest of the script (vignette) on R-console or simply use Knit to generate a HTML report from the pipeline. Note that the results from the optimisation and subsequent analyses will be saved in the sub-folder "Results" within the "vignette" directory
+Subsequent to these assignments, users can run the vignette using Knit to generate a HTML report from the pipeline. In this case, the results from the optimisation and subsequent analyses will be saved in the sub-folder "Results" within the "vignette" directory. Alternatively, users can also proceed further with manual execution of the pipeline on R-console as outlined below.
 
-### Additonal/Special assignments in CNORprob
+### Optimisation
 
-Apart from the core setting options above, users can also assign additional features e.g. the preprocessing of prior knowledge network (please refer to the documentation of CellNOpt for more detail) as well as the network constraint.
+Prior to the optimisation, model and experimental descriptions together with optimisation parameters are combined into an optimisation object 'estim', then the optimisation can be performed.
+
+```R
+estim_Result   <<- list() # Initialise global variable of results
+rsolnp_options  <- list(rho=rho,outer.iter=outer.iter,inner.iter=inner.iter,delta=delta,tol=tol,trace=trace) # Collapase optimisation options
+
+# Generate optimisation object
+estim <- CNORprob_buildModel(optCNOlist,optmodel,expandOR=CNORprob_inputs$ProbExpandOR,ORlist=CNORprob_inputs$ORlist,HardConstraint=CNORprob_inputs$ProbHardConstraint,Force=CNORprob_inputs$ProbForce,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
+
+# Run Optimisation
+estim$maxtime <- MaxTime; estim$printCost <- printCost
+estim$optimOptions <- c(rho,outer.iter,inner.iter,delta,tol,trace)
+res <- CNORprob_optimise(estim,optRound_optim,SaveOptResults)
+```
+
+### Plot results and post-optimisation analyses
+
+The results from CNORprob are stored in the 'res' variable and can be used to plot resulting figures (compare fitting quality and fitted network with weights on edges).
+
+```R
+# Plot results
+CNORprob_plotFit(optmodel,optCNOlist,estim,res,show=TRUE, plotPDF=TRUE, tag=NULL, plotParams=list(cex=0.8, cmap_scale=1, ymin=0))
+MappedProb <- CNORprob_mapModel(optmodel,optCNOlist,estim,res)
+plotModel(MappedProb$model,MappedProb$CNOlist,round(MappedProb$bString,digits=2))
+```
+
+In addition, the 'res' variable can also be passed to run post-optimisation analyses i.e. local parameter sensitivity analysis (LPSA), edge/edge knockout and boot-strapping analysis. Results of plotting and post-optimisation analyses will be stored in the "Results" folder.
+
+```R
+# Post-optimisation analyses
+estim$ProbCompression <- CNORprob_inputs$ProbCompression
+estim$ProbCutNONC <- CNORprob_inputs$ProbCutNONC
+estim$ProbExpandOR <- CNORprob_inputs$ProbExpandOR
+estim$optRound_analysis <- optRound_analysis
+estim_original <- estim
+estim_based <- estim_original; if (Analyses[1]) { estim_Result  <- CNORprob_edgeKO(optmodel,optCNOlist,estim_based,res) }
+estim_based <- estim_original; if (Analyses[2]) { estim_Result  <- CNORprob_nodeKO(optmodel,optCNOlist,estim_based,res) }
+estim_based <- estim_original; if (Analyses[3]) { estim_Result  <- CNORprob_LPSA(estim_based,res,HLbound,LPSA_Increments,Force=F) }
+estim_based <- estim_original; if (Analyses[4]) { estim_Result  <- CNORprob_BS(optmodel,optCNOlist,estim_based,res,BS_Type,BS_Round) }
+
+save(estim_Result,file="Results/CNORprob_PostHocResults.Rdata")
+```
+
+### Manual assignment of input files & additonal/special assignments in CNORprob
+
+In case users would like to use own prior knowledge network (PKN) and experimental data which are in the MIDAS format (please refer to the original documentation of the CellNOptR package and publication), users could the following codes to manually assign the input files which will then converted into model and data in the CellNOpt format.
+
+```R
+# Manual assignment of network (PKN) and experimental data (MIDAS) files
+pknmodel <- readSIF('path_to_your_PKN_model_here') # build a prior-knowledge network from SIF file
+CNOlist <- CNOlist('path_to_your_MIDAS_data_here') # import experimental data from MIDAS file
+``` 
+
+Apart from applyaing the default setting as used in CNORprob examples, users can also assign additional features e.g. the preprocessing of prior knowledge network (please refer to the documentation of CellNOpt for more detail) as well as the network constraint.
 
 "CNORprob_buildModel" provide 4 additional variables: 
 1) "expandOR" refers to the expansion of the OR gate which it was not assigned from the initial list. 
@@ -100,12 +161,18 @@ Apart from the core setting options above, users can also assign additional feat
 4) "Force" refers to the assignment of weight/probability for a single activated to always be 1 (might also be too strict for several cases).
 
 ```R
-# Preprocessing (please see CellNopt documentation)
-model <- preprocessing(CNOlist, pknmodel, expansion=FALSE,compression=TRUE, cutNONC=TRUE, verbose=FALSE)
+# Assign CNORprob-specitifc parameters for pre-processing step
+ProbCompression <- F;ProbCutNONC <- F; ProbExpandOR <- F; ProbHardConstraint <- F; ProbForce <- F # Default (most-relaxed) setting 
 
-# Model building with specified OR gate interaction
-estim <- CNORprob_buildModel(CNOlist,model,expandOR=FALSE,ORlist=c("Grb2SOS_OR_GabSOS=GGSOS"),HardConstraint=TRUE,Force=TRUE,L1Reg=L1Reg,HLbound=HLbound,SSthresh=SSthresh,PlotIterations=PlotIterations,rsolnp_options=rsolnp_options)
-```
+# Run CNORprob-specific pre-processing (expansion=FALSE by default and report)
+ModDatppProb <- preprocessing_Prob(CNOlist, pknmodel, expansion=FALSE,
+                                     compression=ProbCompression, cutNONC=ProbCutNONC,
+                                     verbose=FALSE) 
+optmodel <- ModDatppProb$cutModel
+optCNOlist <- ModDatppProb$data
+``` 
+
+The variables 'optmodel' and 'optCNOlist' could then be passed into the optimisation pipeline to generate results as outlined above (start from the 'Optimisation' section).
 
 ## Authors
 
