@@ -122,7 +122,9 @@ The results from CNORprob are stored in the 'res' variable and can be used to pl
 # Plot results
 CNORprob_plotFit(optmodel,optCNOlist,estim,res,show=TRUE, plotPDF=TRUE, tag=NULL, plotParams=list(cex=0.8, cmap_scale=1, ymin=0))
 MappedProb <- CNORprob_mapModel(optmodel,optCNOlist,estim,res)
+pdf("Results/Figures/Optimised_CNORprob_Model.pdf")
 plotModel(MappedProb$model,MappedProb$CNOlist,round(MappedProb$bString,digits=2))
+dev.off()
 ```
 
 In addition, the 'res' variable can also be passed to run post-optimisation analyses i.e. local parameter sensitivity analysis (LPSA), edge/edge knockout and boot-strapping analysis. Results of plotting and post-optimisation analyses will be stored in the "Results" folder.
@@ -152,7 +154,7 @@ pknmodel <- readSIF('path_to_your_PKN_model_here') # build a prior-knowledge net
 CNOlist <- CNOlist('path_to_your_MIDAS_data_here') # import experimental data from MIDAS file
 ``` 
 
-Apart from applyaing the default setting as used in CNORprob examples, users can also assign additional features e.g. the preprocessing of prior knowledge network (please refer to the documentation of CellNOpt for more detail) as well as the network constraint.
+Apart from applying the default setting as used in CNORprob examples, users can also assign additional features e.g. the preprocessing of prior knowledge network (please refer to the documentation of CellNOpt for more detail) as well as the network constraint.
 
 "CNORprob_buildModel" provide 4 additional variables: 
 1) "expandOR" refers to the expansion of the OR gate which it was not assigned from the initial list. 
@@ -173,6 +175,18 @@ optCNOlist <- ModDatppProb$data
 ``` 
 
 The variables 'optmodel' and 'optCNOlist' could then be passed into the optimisation pipeline to generate results as outlined above (start from the 'Optimisation' section).
+
+Alternatively, CNORprob also offer a one-line wrapper function 'runCNORprob' where users can either call CNORprob examples or use own PKN and experimental data as follows:
+
+```R
+# Call from CNORprob examples
+res <- runCNORprob(CNORprob_Example = 1) # Please also see all adjustable parameters in the help file of the function
+
+# Call from input files (here CNORprob example 2 is used as an example 
+file.copy(from=system.file("FALCON_Ex1_Model.sif",package="CNORprob"),to=getwd(),overwrite=TRUE) # retrieve network file
+file.copy(from=system.file("FALCON_Ex1_Exp.csv",package="CNORprob"),to=getwd(),overwrite=TRUE) # retrieve measurement file
+res <- runCNORprob(model="FALCON_Ex1_Model.sif",data = "FALCON_Ex1_Exp.csv",CNORprob_Example = NULL)
+``` 
 
 ## Authors
 
