@@ -112,14 +112,15 @@ CNORprob_BS = function(model,CNOlist,estim,res,BS_Type,BS_Round,AddSD=0.05,SeedN
   res$BestFitParams <- colMeans(param_BS)
   # bString <- CNORprob_mapModel(model,estim,res)
   # MappedProb <- CNORprob_mapModel(optmodel,estim,res)
-  MappedProb <- CNORprob_mapModel(optmodel,optCNOlist,estim,res)
+  # MappedProb <- CNORprob_mapModel(optmodel,optCNOlist,estim,res)
+  MappedProb <- CNORprob_mapModel(model,CNOlist,estim,res)
   
   pdf(paste0("Results/Figures/FitParam_BS_CNORprob_Type",BS_Type,".pdf"))
   # plotModel(model=model,CNOlist = CNOlist,bString = bString)
-  plotModel(MappedProb$model,optCNOlist,round(MappedProb$bString,digits=2))
+  plotModel(MappedProb$model,MappedProb$CNOlist,round(MappedProb$bString,digits=2))
   dev.off()
   # plotModel(model=model,CNOlist = CNOlist,bString = bString)
-  plotModel(MappedProb$model,optCNOlist,round(MappedProb$bString,digits=2))
+  plotModel(MappedProb$model,MappedProb$CNOlist,round(MappedProb$bString,digits=2))
 
   estim_Result$BS$Cost_BS      <- cost_BS
   # estim_Result$BS$BS_param     <- bString
